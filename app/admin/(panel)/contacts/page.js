@@ -7,8 +7,9 @@ export default async function AdminContactsPage() {
   return (
     <>
       <AdminPageHeader
-        title="Contact management"
-        description="Customer messages from the website, with nearest dealer suggestions captured at submit time."
+        title="Enquiries"
+        description="Customer messages with nearest dealer context captured at submission."
+        breadcrumb={[{ label: "Admin", href: "/admin" }, { label: "Customers" }, { label: "Enquiries" }]}
       />
       <ContactsAdmin submissions={submissions} />
     </>

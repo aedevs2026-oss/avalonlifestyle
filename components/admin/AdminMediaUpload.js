@@ -59,8 +59,8 @@ export default function AdminMediaUpload({
         onChange={(e) => onChange(e.target.value)}
       />
       <div className="flex flex-wrap items-center gap-3">
-        <label className="admin-btn admin-btn-ghost cursor-pointer text-xs">
-          {pending ? "Uploading…" : "Upload to Supabase"}
+        <label className="admin-btn admin-btn-ghost cursor-pointer text-xs" title="Optional — seed uses public/ paths only">
+          {pending ? "Uploading…" : "Upload to Supabase (optional)"}
           <input
             type="file"
             className="hidden"
@@ -81,8 +81,8 @@ export default function AdminMediaUpload({
       </div>
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
       {showPreview && value && isImage ? (
-        <div className="relative mt-2 h-24 w-32 overflow-hidden rounded-lg border border-[var(--admin-border)] bg-black/20">
-          <Image src={value} alt="" fill className="object-contain p-1" unoptimized />
+        <div className="admin-media-preview relative">
+          <Image src={value} alt="" fill className="object-contain p-2" unoptimized />
         </div>
       ) : null}
       {value && !isImage ? (

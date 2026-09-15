@@ -6,7 +6,11 @@ export default async function AdminStoriesPage() {
   const stories = await fetchAdminTable("stories", "sort_order", true);
   return (
     <>
-      <AdminPageHeader title="Stories management" description="Brand stories for home and editorial sections." />
+      <AdminPageHeader
+        title="Stories"
+        description="Editorial narratives for home insights and brand storytelling."
+        breadcrumb={[{ label: "Admin", href: "/admin" }, { label: "Content" }, { label: "Stories" }]}
+      />
       <StoriesAdmin stories={stories} />
     </>
   );

@@ -7,7 +7,11 @@ export default function DealerApplicationsAdmin({ applications }) {
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="admin-card overflow-x-auto">
+    <div className="admin-card overflow-hidden">
+      <div className="admin-table-toolbar">
+        <h3>Partner applications</h3>
+      </div>
+      <div className="admin-table-wrap">
       <table className="admin-table">
         <thead>
           <tr>
@@ -68,6 +72,7 @@ export default function DealerApplicationsAdmin({ applications }) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

@@ -61,7 +61,7 @@ export default function AdminLoginForm({ nextPath, errorCode }) {
             height={42}
             className="mx-auto mb-3"
           />
-          <h1 className="font-serif text-2xl text-avalon-black">Admin Sign In</h1>
+          <h1>Admin Sign In</h1>
           <p className="mt-2 text-sm text-[var(--admin-muted)]">
             Secure access for catalogue, dealers, and customer enquiries.
           </p>

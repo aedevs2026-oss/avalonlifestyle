@@ -4,7 +4,7 @@
 insert into public.admin_profiles (user_id, email, full_name, role)
 values (
   'PASTE-AUTH-USER-UUID-HERE',
-  'your-admin@email.com',
+  'theavalonlifestyle@gmail.com',
   'Avalon Admin',
   'super_admin'
 )

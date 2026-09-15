@@ -6,7 +6,7 @@
  *
  * Requires .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  */
-import { createClient } from "@supabase/supabase-js";
+import { createServiceRoleClient } from "../lib/supabase/nodeClient.js";
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
@@ -54,9 +54,7 @@ if (!url || !serviceKey) {
   process.exit(1);
 }
 
-const supabase = createClient(url, serviceKey, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+const supabase = createServiceRoleClient(url, serviceKey);
 
 const { data: listData, error: listError } = await supabase.auth.admin.listUsers({
   page: 1,

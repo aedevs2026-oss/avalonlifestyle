@@ -6,8 +6,13 @@
  *   - Migrations 001 + 002 applied
  *
  * Usage: npm run seed
+ *
+ * Images: NOT uploaded to Supabase Storage. Category `image_url` and product
+ * `payload.image` / `payload.layersImage` are site-relative paths from
+ * `lib/assets.js` → files in `public/` (same as the live site). Replace via
+ * admin uploads later when you want Storage URLs.
  */
-import { createClient } from "@supabase/supabase-js";
+import { createServiceRoleClient } from "../lib/supabase/nodeClient.js";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -44,9 +49,7 @@ if (!url || !key) {
   process.exit(1);
 }
 
-const supabase = createClient(url, key, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+const supabase = createServiceRoleClient(url, key);
 
 const snapshot = await import("../lib/seed/frontendSnapshot.js");
 
@@ -166,7 +169,8 @@ async function seedDealers() {
     updated_at: new Date().toISOString(),
   }));
 
-  const { error } = await supabase.from("dealers").upsert(rows, { onConflict: "legacy_id" });
+  await supabase.from("dealers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  const { error } = await supabase.from("dealers").insert(rows);
   if (error) throw error;
   console.log(`Seeded ${rows.length} dealers`);
 }

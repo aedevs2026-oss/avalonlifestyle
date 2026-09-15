@@ -23,6 +23,10 @@ export default function BrochuresAdmin({ brochures }) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="admin-card overflow-hidden">
+        <div className="admin-table-toolbar">
+          <h3>Brochures & catalogues</h3>
+        </div>
+        <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
             <tr>
@@ -52,6 +56,7 @@ export default function BrochuresAdmin({ brochures }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
       <form
         onSubmit={(e) => {

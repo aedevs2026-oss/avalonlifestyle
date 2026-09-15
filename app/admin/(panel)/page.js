@@ -1,26 +1,21 @@
-import Link from "next/link";
+import AdminDashboardView from "@/components/admin/AdminDashboardView";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
-import { fetchDashboardCounts } from "@/lib/admin/queries";
+import { getAdminProfile } from "@/lib/admin/auth";
+import { fetchDashboardCounts, fetchDashboardRecent } from "@/lib/admin/queries";
 
 export default async function AdminDashboardPage() {
-  const counts = await fetchDashboardCounts();
-
-  const cards = counts
-    ? [
-        { label: "New contact messages", value: counts.new_contacts, href: "/admin/contacts" },
-        { label: "Dealer enquiries", value: counts.new_dealer_applications, href: "/admin/dealer-applications" },
-        { label: "Products", value: counts.products, href: "/admin/products" },
-        { label: "Dealers", value: counts.dealers, href: "/admin/dealers" },
-        { label: "Stories", value: counts.stories, href: "/admin/stories" },
-        { label: "Brochures", value: counts.brochures, href: "/admin/brochures" },
-      ]
-    : [];
+  const [counts, recent, profile] = await Promise.all([
+    fetchDashboardCounts(),
+    fetchDashboardRecent(),
+    getAdminProfile(),
+  ]);
 
   return (
     <>
       <AdminPageHeader
-        title="Overview"
-        description="Manage catalogue content, dealer network, and customer enquiries from one secure console."
+        title="Dashboard"
+        description="A refined overview of catalogue health, dealer network, and customer conversations."
+        breadcrumb={[{ label: "Admin", href: "/admin" }, { label: "Dashboard" }]}
       />
       {!counts ? (
         <div className="admin-card admin-card-body text-sm text-[var(--admin-muted)]">
@@ -28,14 +23,7 @@ export default async function AdminDashboardPage() {
           (see <code className="text-[var(--admin-text)]">docs/SUPABASE_ADMIN.md</code>).
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {cards.map((card) => (
-            <Link key={card.label} href={card.href} className="admin-stat">
-              <strong>{card.value}</strong>
-              <span className="text-sm text-[var(--admin-muted)]">{card.label}</span>
-            </Link>
-          ))}
-        </div>
+        <AdminDashboardView profile={profile} counts={counts} recent={recent} />
       )}
     </>
   );

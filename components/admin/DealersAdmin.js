@@ -31,7 +31,11 @@ export default function DealersAdmin({ dealers }) {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-      <div className="admin-card overflow-x-auto">
+      <div className="admin-card overflow-hidden">
+        <div className="admin-table-toolbar">
+          <h3>Dealer network</h3>
+        </div>
+        <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
             <tr><th>Name</th><th>City</th><th>Coords</th><th>Active</th><th /></tr>
@@ -51,6 +55,7 @@ export default function DealersAdmin({ dealers }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
       <form
         onSubmit={(e) => {

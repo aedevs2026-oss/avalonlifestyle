@@ -6,7 +6,11 @@ export default async function AdminBrochuresPage() {
   const brochures = await fetchAdminTable("brochures", "sort_order", true);
   return (
     <>
-      <AdminPageHeader title="Brochures & catalogues" description="Downloads shown on Resources and share flows." />
+      <AdminPageHeader
+        title="Brochures"
+        description="Premium downloads for the Resources experience."
+        breadcrumb={[{ label: "Admin", href: "/admin" }, { label: "Content" }, { label: "Brochures" }]}
+      />
       <BrochuresAdmin brochures={brochures} />
     </>
   );

@@ -12,7 +12,12 @@ export default async function AdminProductsPage() {
     <>
       <AdminPageHeader
         title="Product management"
-        description="Publish mattresses and catalogue data. Store extended fields in the JSON payload."
+        description="Curate your luxury mattress catalogue — imagery, specifications, and publishing status."
+        breadcrumb={[
+          { label: "Admin", href: "/admin" },
+          { label: "Catalogue" },
+          { label: "Products" },
+        ]}
       />
       <ProductsAdmin products={products} categories={categories} />
     </>

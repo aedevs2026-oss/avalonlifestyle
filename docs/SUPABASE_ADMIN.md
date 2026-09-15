@@ -1,5 +1,10 @@
 # Avalon Admin Panel & Supabase Setup
 
+## Node.js version
+
+- **Recommended:** Node **22+** (native WebSocket; matches current `@supabase/supabase-js`).
+- **Node 20:** `npm run seed` and `grant-admin` work via the `ws` package (`lib/supabase/nodeClient.js`). You may still see a deprecation warning until you upgrade.
+
 ## 1. Create a Supabase project
 
 1. Create a project at [supabase.com](https://supabase.com).
@@ -82,6 +87,17 @@ This syncs **everything currently on the website** into the admin database:
 - **Stories** from Home insights, resource guides, and resource videos
 
 Re-run `npm run seed` any time you change static frontend data and want admin to match.
+
+### Products & categories (what gets seeded)
+
+| Item | Count (today) | Details in admin |
+|------|----------------|------------------|
+| Categories | 6 filter types (excludes “All Mattresses”) | `name`, `slug`, `description`, `sort_order`, `image_url` |
+| Products | 9 mattresses | Columns + **full `payload`**: price, specs, sizes, highlights, layers, badge, ratings, `image`, `layersImage`, etc. |
+
+**Images during seed:** nothing is copied to Supabase Storage. URLs point at the **existing `public/` files** (e.g. `/products/1000276743.jpg`, `/products/layers/prince.jpg`, category thumbnails from `lib/seed/frontendSnapshot.js`). The site and admin both load those paths the same way as before.
+
+**Later:** in Admin → Products or Categories, use **Upload to Supabase (optional)** to store files in the `catalog-media` bucket and save the returned URL. Until then, keep editing copy/specs in admin and leave image fields on `/products/…` paths.
 
 ## 5. Admin URL
 

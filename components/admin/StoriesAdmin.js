@@ -12,6 +12,10 @@ export default function StoriesAdmin({ stories }) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="admin-card overflow-hidden">
+        <div className="admin-table-toolbar">
+          <h3>Editorial stories</h3>
+        </div>
+        <div className="admin-table-wrap">
         <table className="admin-table">
           <thead><tr><th>Title</th><th>Published</th><th /></tr></thead>
           <tbody>
@@ -27,6 +31,7 @@ export default function StoriesAdmin({ stories }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
       <form
         onSubmit={(e) => {

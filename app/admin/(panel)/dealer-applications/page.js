@@ -6,7 +6,11 @@ export default async function AdminDealerApplicationsPage() {
   const applications = await fetchAdminTable("dealer_applications");
   return (
     <>
-      <AdminPageHeader title="Become a dealer" description="Partnership enquiries from the dealer application form." />
+      <AdminPageHeader
+        title="Applications"
+        description="Partnership enquiries from the become-a-dealer journey."
+        breadcrumb={[{ label: "Admin", href: "/admin" }, { label: "Network" }, { label: "Applications" }]}
+      />
       <DealerApplicationsAdmin applications={applications} />
     </>
   );

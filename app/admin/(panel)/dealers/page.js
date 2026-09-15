@@ -7,8 +7,9 @@ export default async function AdminDealersPage() {
   return (
     <>
       <AdminPageHeader
-        title="Dealer management"
-        description="Authorized showrooms used on the map and for nearest-dealer suggestions in contact emails."
+        title="Dealers"
+        description="Authorized showrooms for the locator map and nearest-dealer email suggestions."
+        breadcrumb={[{ label: "Admin", href: "/admin" }, { label: "Network" }, { label: "Dealers" }]}
       />
       <DealersAdmin dealers={dealers} />
     </>

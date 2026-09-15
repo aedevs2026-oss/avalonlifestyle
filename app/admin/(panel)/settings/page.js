@@ -39,7 +39,8 @@ export default async function AdminSettingsPage() {
     <>
       <AdminPageHeader
         title="Settings"
-        description="Company contact details for the live site, enquiry routing, and dealer radius."
+        description="Company identity, enquiry routing, and email delivery."
+        breadcrumb={[{ label: "Admin", href: "/admin" }, { label: "System" }, { label: "Settings" }]}
       />
       <SettingsAdmin companySettings={companySettings} emailSettings={emailSettings} envStatus={envStatus} />
     </>

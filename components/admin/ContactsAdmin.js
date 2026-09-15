@@ -2,12 +2,16 @@
 
 import { useTransition } from "react";
 import { updateContactSubmissionStatus } from "@/lib/admin/actions";
-
 export default function ContactsAdmin({ submissions }) {
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="admin-card overflow-x-auto">
+    <div className="admin-card overflow-hidden">
+      <div className="admin-table-toolbar">
+        <h3>Customer enquiries</h3>
+        <span className="text-xs text-[var(--admin-muted)]">{submissions.length} total</span>
+      </div>
+      <div className="admin-table-wrap">
       <table className="admin-table">
         <thead>
           <tr>
@@ -25,7 +29,7 @@ export default function ContactsAdmin({ submissions }) {
                 {new Date(row.created_at).toLocaleString()}
               </td>
               <td>
-                <strong>{row.name}</strong>
+                <strong className="font-medium">{row.name}</strong>
                 <br />
                 {row.email}
                 <br />
@@ -34,7 +38,7 @@ export default function ContactsAdmin({ submissions }) {
                 {row.city}
               </td>
               <td className="max-w-[240px]">
-                <span className="text-[var(--admin-gold)]">{row.subject}</span>
+                <span className="text-[var(--admin-champagne-muted)]">{row.subject}</span>
                 <p className="mt-1 text-[var(--admin-muted)]">{row.message}</p>
               </td>
               <td className="max-w-[220px] text-xs">
@@ -64,6 +68,7 @@ export default function ContactsAdmin({ submissions }) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
