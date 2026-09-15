@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import NearStoreWelcome from "@/components/location/NearStoreWelcome";
 import SplashScreen from "@/components/layout/SplashScreen";
+import AskAvalonWidget from "@/components/chat/AskAvalonWidget";
 
 export default function SiteChrome({ children }) {
   const pathname = usePathname();
@@ -21,6 +22,7 @@ export default function SiteChrome({ children }) {
       <main className="flex-1 min-w-0 max-lg:overflow-x-clip">{children}</main>
       <Footer />
       <NearStoreWelcome />
+      <AskAvalonWidget />
     </>
   );
 }

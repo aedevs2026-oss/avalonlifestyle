@@ -21,6 +21,7 @@ import {
   Bell,
   LogOut,
   ExternalLink,
+  Bot,
 } from "lucide-react";
 import { signOutAdmin } from "@/lib/admin/actions";
 import { assets } from "@/lib/assets";
@@ -54,6 +55,10 @@ const navGroups = [
       { href: "/admin/dealers", label: "Dealers", icon: MapPin },
       { href: "/admin/dealer-applications", label: "Applications", icon: UserPlus },
     ],
+  },
+  {
+    title: "AI",
+    items: [{ href: "/admin/ai-knowledge", label: "AI Knowledge", icon: Bot }],
   },
   {
     title: "System",
