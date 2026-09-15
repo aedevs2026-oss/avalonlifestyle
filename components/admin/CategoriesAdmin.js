@@ -30,13 +30,13 @@ export default function CategoriesAdmin({ categories }) {
 
   async function submit(e) {
     e.preventDefault();
-    const ok = await run(() => upsertCategory(form), form.id ? "Category updated." : "Category created.");
+    const ok = await run(() => upsertCategory(form), form.id ? "Category updated." : "Category created.", { fullReload: true });
     if (ok && !form.id) setForm(empty);
   }
 
   async function remove(id) {
     if (!window.confirm("Delete this category?")) return;
-    const ok = await run(() => deleteCategory(id), "Category deleted.");
+    const ok = await run(() => deleteCategory(id), "Category deleted.", { fullReload: true });
     if (ok && form.id === id) setForm(empty);
   }
 

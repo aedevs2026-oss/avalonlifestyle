@@ -90,13 +90,14 @@ export default function ProductsAdmin({ products, categories }) {
     const ok = await run(
       () => upsertProduct(form),
       form.id ? "Product updated." : "Product created.",
+      { fullReload: true },
     );
     if (ok && !form.id) setForm(emptyProductForm());
   }
 
   async function remove(id) {
     if (!window.confirm("Delete this product permanently?")) return;
-    const ok = await run(() => deleteProduct(id), "Product deleted.");
+    const ok = await run(() => deleteProduct(id), "Product deleted.", { fullReload: true });
     if (ok && form.id === id) setForm(emptyProductForm());
   }
 

@@ -28,13 +28,13 @@ export default function BrochuresAdmin({ brochures }) {
 
   async function submit(e) {
     e.preventDefault();
-    const ok = await run(() => upsertBrochure(form), form.id ? "Download updated." : "Download created.");
+    const ok = await run(() => upsertBrochure(form), form.id ? "Download updated." : "Download created.", { fullReload: true });
     if (ok && !form.id) setForm(empty);
   }
 
   async function remove(id) {
     if (!window.confirm("Delete this brochure?")) return;
-    const ok = await run(() => deleteBrochure(id), "Brochure deleted.");
+    const ok = await run(() => deleteBrochure(id), "Brochure deleted.", { fullReload: true });
     if (ok && form.id === id) setForm(empty);
   }
 

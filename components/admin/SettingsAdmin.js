@@ -16,7 +16,7 @@ export default function SettingsAdmin({ companySettings, emailSettings, envStatu
       <form
         onSubmit={async (e) => {
           e.preventDefault();
-          await run(() => saveCompanySettings(company), "Company information saved.");
+          await run(() => saveCompanySettings(company), "Company information saved.", { fullReload: true });
         }}
         className="admin-card admin-card-body space-y-3"
       >
@@ -37,7 +37,7 @@ export default function SettingsAdmin({ companySettings, emailSettings, envStatu
         <form
           onSubmit={async (e) => {
             e.preventDefault();
-            await run(() => saveEmailSettings(email), "Email & SMTP settings saved.");
+            await run(() => saveEmailSettings(email), "Email & SMTP settings saved.", { fullReload: true });
           }}
           className="admin-card admin-card-body space-y-3"
         >

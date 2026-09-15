@@ -45,13 +45,13 @@ export default function StoriesAdmin({ stories }) {
 
   async function submit(e) {
     e.preventDefault();
-    const ok = await run(() => upsertStory(form), form.id ? "Story updated." : "Story created.");
+    const ok = await run(() => upsertStory(form), form.id ? "Story updated." : "Story created.", { fullReload: true });
     if (ok && !form.id) setForm(empty);
   }
 
   async function remove(id) {
     if (!window.confirm("Delete this story?")) return;
-    const ok = await run(() => deleteStory(id), "Story deleted.");
+    const ok = await run(() => deleteStory(id), "Story deleted.", { fullReload: true });
     if (ok && form.id === id) setForm(empty);
   }
 

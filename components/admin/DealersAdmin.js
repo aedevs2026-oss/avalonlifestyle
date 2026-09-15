@@ -44,13 +44,13 @@ export default function DealersAdmin({ dealers }) {
 
   async function submit(e) {
     e.preventDefault();
-    const ok = await run(() => upsertDealer(form), form.id ? "Dealer updated." : "Dealer created.");
+    const ok = await run(() => upsertDealer(form), form.id ? "Dealer updated." : "Dealer created.", { fullReload: true });
     if (ok && !form.id) setForm(empty);
   }
 
   async function remove(id) {
     if (!window.confirm("Delete this dealer?")) return;
-    const ok = await run(() => deleteDealer(id), "Dealer deleted.");
+    const ok = await run(() => deleteDealer(id), "Dealer deleted.", { fullReload: true });
     if (ok && form.id === id) setForm(empty);
   }
 
