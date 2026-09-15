@@ -9,7 +9,8 @@
     "lint": "eslint",
     "seed": "node scripts/seed-supabase.mjs",
     "grant-admin": "node scripts/grant-admin.mjs",
-    "admin:smoke": "node scripts/admin-smoke.mjs"
+    "admin:smoke": "node scripts/admin-smoke.mjs",
+    "test:product-crud": "node scripts/test-product-crud.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

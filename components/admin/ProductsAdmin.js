@@ -2,26 +2,16 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
-import { Search, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, Search, Trash2 } from "lucide-react";
 import { deleteProduct, upsertProduct } from "@/lib/admin/actions";
+import {
+  BADGE_COLORS,
+  emptyProductForm,
+  productRowToForm,
+} from "@/lib/admin/productForm";
 import AdminMediaUpload from "@/components/admin/AdminMediaUpload";
 import AdminStatusBadge from "@/components/admin/AdminStatusBadge";
-
-const empty = {
-  id: "",
-  slug: "",
-  name: "",
-  product_type: "",
-  category_id: "",
-  sort_order: 0,
-  is_published: false,
-  is_featured: false,
-  seo_title: "",
-  seo_description: "",
-  productImage: "",
-  layersImage: "",
-  payloadJson: "{}",
-};
 
 function formatPrice(payload) {
   if (!payload?.price) return null;
@@ -33,10 +23,17 @@ function formatPrice(payload) {
 }
 
 export default function ProductsAdmin({ products, categories }) {
-  const [form, setForm] = useState(empty);
+  const router = useRouter();
+  const [form, setForm] = useState(emptyProductForm());
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [pending, startTransition] = useTransition();
+
+  const categoryById = useMemo(
+    () => new Map(categories.map((c) => [c.id, c.name])),
+    [categories],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -49,48 +46,80 @@ export default function ProductsAdmin({ products, categories }) {
     );
   }, [products, query]);
 
+  function startNew() {
+    setForm(emptyProductForm());
+    setMessage("");
+    setError("");
+  }
+
   function edit(row) {
-    setForm({
-      id: row.id,
-      slug: row.slug,
-      name: row.name,
-      product_type: row.product_type || "",
-      category_id: row.category_id || "",
-      sort_order: row.sort_order || 0,
-      is_published: row.is_published,
-      is_featured: row.is_featured,
-      seo_title: row.seo_title || "",
-      seo_description: row.seo_description || "",
-      productImage: row.payload?.image || "",
-      layersImage: row.payload?.layersImage || "",
-      payloadJson: JSON.stringify(row.payload || {}, null, 2),
+    setForm(productRowToForm(row));
+    setMessage("");
+    setError("");
+  }
+
+  function onCategoryChange(categoryId) {
+    const name = categoryById.get(categoryId) || "";
+    setForm((f) => ({
+      ...f,
+      category_id: categoryId,
+      product_type: name || f.product_type,
+    }));
+  }
+
+  function updateSize(index, field, value) {
+    setForm((f) => {
+      const sizes = [...f.sizes];
+      sizes[index] = { ...sizes[index], [field]: value };
+      return { ...f, sizes };
     });
+  }
+
+  function addSize() {
+    setForm((f) => ({
+      ...f,
+      sizes: [...f.sizes, { name: "", dimensions: "", price: f.price || "" }],
+    }));
+  }
+
+  function removeSize(index) {
+    setForm((f) => ({
+      ...f,
+      sizes: f.sizes.filter((_, i) => i !== index),
+    }));
   }
 
   function submit(e) {
     e.preventDefault();
     setMessage("");
+    setError("");
     startTransition(async () => {
       try {
-        const payload = JSON.parse(form.payloadJson || "{}");
-        if (form.productImage) payload.image = form.productImage;
-        if (form.layersImage) payload.layersImage = form.layersImage;
-        await upsertProduct({
-          ...form,
-          payloadJson: JSON.stringify(payload, null, 2),
-        });
-        setMessage("Saved.");
-        if (!form.id) setForm(empty);
+        await upsertProduct(form);
+        setMessage(form.id ? "Product updated." : "Product created.");
+        if (!form.id) {
+          setForm(emptyProductForm());
+        }
+        router.refresh();
       } catch (err) {
-        setMessage(err.message || "Save failed.");
+        setError(err.message || "Save failed.");
       }
     });
   }
 
   function remove(id) {
-    if (!window.confirm("Delete this product?")) return;
+    if (!window.confirm("Delete this product permanently?")) return;
+    setMessage("");
+    setError("");
     startTransition(async () => {
-      await deleteProduct(id);
+      try {
+        await deleteProduct(id);
+        if (form.id === id) setForm(emptyProductForm());
+        setMessage("Product deleted.");
+        router.refresh();
+      } catch (err) {
+        setError(err.message || "Delete failed.");
+      }
     });
   }
 
@@ -99,19 +128,25 @@ export default function ProductsAdmin({ products, categories }) {
       <div className="admin-card overflow-hidden">
         <div className="admin-table-toolbar">
           <h3>Product catalogue</h3>
-          <div className="relative w-full max-w-xs">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--admin-muted-soft)]"
-              size={16}
-              strokeWidth={1.5}
-            />
-            <input
-              className="admin-input pl-9"
-              placeholder="Search name, slug, type…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label="Filter products"
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" className="admin-btn admin-btn-accent admin-btn-sm" onClick={startNew}>
+              <Plus size={14} strokeWidth={1.5} />
+              New product
+            </button>
+            <div className="relative w-full max-w-xs">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--admin-muted-soft)]"
+                size={16}
+                strokeWidth={1.5}
+              />
+              <input
+                className="admin-input pl-9"
+                placeholder="Search…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Filter products"
+              />
+            </div>
           </div>
         </div>
         <div className="admin-table-wrap">
@@ -183,16 +218,15 @@ export default function ProductsAdmin({ products, categories }) {
         </div>
       </div>
 
-      <form onSubmit={submit} className="admin-card admin-form-panel">
+      <form onSubmit={submit} className="admin-card admin-form-panel max-h-[calc(100vh-6rem)] overflow-y-auto">
         <div className="admin-card-header">
           <h2>{form.id ? "Edit product" : "New product"}</h2>
         </div>
         <div className="admin-card-body space-y-4">
-          <p className="text-xs leading-relaxed text-[var(--admin-muted)]">
-            Seed data uses <code className="text-[10px]">public/</code> image paths until you upload to
-            Supabase Storage.
-          </p>
+          {error ? <p className="admin-alert-error">{error}</p> : null}
           {message ? <p className="admin-message-ok">{message}</p> : null}
+
+          <p className="admin-card-section-title">Identity</p>
           <div className="admin-form-grid admin-form-grid-2">
             <div>
               <label className="admin-label">Name</label>
@@ -205,12 +239,12 @@ export default function ProductsAdmin({ products, categories }) {
           </div>
           <div className="admin-form-grid admin-form-grid-2">
             <div>
-              <label className="admin-label">Type</label>
-              <input className="admin-input" value={form.product_type} onChange={(e) => setForm({ ...form, product_type: e.target.value })} />
+              <label className="admin-label">Mattress type</label>
+              <input className="admin-input" value={form.product_type} onChange={(e) => setForm({ ...form, product_type: e.target.value })} placeholder="Pocket Spring" />
             </div>
             <div>
               <label className="admin-label">Category</label>
-              <select className="admin-select" value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })}>
+              <select className="admin-select" value={form.category_id} onChange={(e) => onCategoryChange(e.target.value)}>
                 <option value="">—</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
@@ -218,9 +252,15 @@ export default function ProductsAdmin({ products, categories }) {
               </select>
             </div>
           </div>
-          <div>
-            <label className="admin-label">Sort order</label>
-            <input className="admin-input" type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: e.target.value })} />
+          <div className="admin-form-grid admin-form-grid-2">
+            <div>
+              <label className="admin-label">Sort order</label>
+              <input className="admin-input" type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: e.target.value })} />
+            </div>
+            <div>
+              <label className="admin-label">Base price (₹)</label>
+              <input className="admin-input" type="number" min={0} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+            </div>
           </div>
           <label className="admin-checkbox">
             <input type="checkbox" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} />
@@ -230,14 +270,100 @@ export default function ProductsAdmin({ products, categories }) {
             <input type="checkbox" checked={form.is_featured} onChange={(e) => setForm({ ...form, is_featured: e.target.checked })} />
             Featured (home slider)
           </label>
-          <div>
-            <label className="admin-label">SEO title</label>
-            <input className="admin-input" value={form.seo_title} onChange={(e) => setForm({ ...form, seo_title: e.target.value })} />
+
+          <p className="admin-card-section-title">Merchandising</p>
+          <div className="admin-form-grid admin-form-grid-2">
+            <div>
+              <label className="admin-label">Badge label</label>
+              <input className="admin-input" value={form.badge} onChange={(e) => setForm({ ...form, badge: e.target.value })} placeholder="BESTSELLER" />
+            </div>
+            <div>
+              <label className="admin-label">Badge color</label>
+              <select className="admin-select" value={form.badgeColor} onChange={(e) => setForm({ ...form, badgeColor: e.target.value })}>
+                <option value="">—</option>
+                {BADGE_COLORS.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <div>
-            <label className="admin-label">SEO description</label>
-            <textarea className="admin-textarea min-h-[80px]" value={form.seo_description} onChange={(e) => setForm({ ...form, seo_description: e.target.value })} />
+            <label className="admin-label">Tagline</label>
+            <input className="admin-input" value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} />
           </div>
+          <div>
+            <label className="admin-label">Description</label>
+            <textarea className="admin-textarea min-h-[100px]" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </div>
+
+          <p className="admin-card-section-title">Specifications</p>
+          <div className="admin-form-grid admin-form-grid-2">
+            <div>
+              <label className="admin-label">Thickness</label>
+              <input className="admin-input" value={form.thickness} onChange={(e) => setForm({ ...form, thickness: e.target.value })} />
+            </div>
+            <div>
+              <label className="admin-label">Warranty</label>
+              <input className="admin-input" value={form.warranty} onChange={(e) => setForm({ ...form, warranty: e.target.value })} />
+            </div>
+            <div>
+              <label className="admin-label">Usage</label>
+              <input className="admin-input" value={form.usage} onChange={(e) => setForm({ ...form, usage: e.target.value })} />
+            </div>
+            <div>
+              <label className="admin-label">Fabric (optional)</label>
+              <input className="admin-input" value={form.fabric} onChange={(e) => setForm({ ...form, fabric: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <label className="admin-label">Full specs line</label>
+            <input className="admin-input" value={form.specs} onChange={(e) => setForm({ ...form, specs: e.target.value })} />
+          </div>
+          <div>
+            <label className="admin-label">Short specs (cards)</label>
+            <input className="admin-input" value={form.shortSpecs} onChange={(e) => setForm({ ...form, shortSpecs: e.target.value })} />
+          </div>
+          <div className="admin-form-grid admin-form-grid-2">
+            <div>
+              <label className="admin-label">Rating</label>
+              <input className="admin-input" type="number" step="0.1" min={0} max={5} value={form.rating} onChange={(e) => setForm({ ...form, rating: e.target.value })} />
+            </div>
+            <div>
+              <label className="admin-label">Review count</label>
+              <input className="admin-input" type="number" min={0} value={form.reviews} onChange={(e) => setForm({ ...form, reviews: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <label className="admin-label">Highlights (one per line)</label>
+            <textarea className="admin-textarea min-h-[80px]" value={form.highlightsText} onChange={(e) => setForm({ ...form, highlightsText: e.target.value })} />
+          </div>
+          <div>
+            <label className="admin-label">Layers (one per line)</label>
+            <textarea className="admin-textarea min-h-[80px]" value={form.layersText} onChange={(e) => setForm({ ...form, layersText: e.target.value })} />
+          </div>
+
+          <p className="admin-card-section-title">Sizes & pricing</p>
+          {form.sizes.map((size, index) => (
+            <div key={index} className="rounded-[var(--admin-radius-sm)] border border-[var(--admin-border)] p-3 space-y-2">
+              <div className="admin-form-grid admin-form-grid-2">
+                <input className="admin-input" placeholder="Size name" value={size.name} onChange={(e) => updateSize(index, "name", e.target.value)} />
+                <input className="admin-input" placeholder="Dimensions" value={size.dimensions} onChange={(e) => updateSize(index, "dimensions", e.target.value)} />
+              </div>
+              <div className="flex gap-2">
+                <input className="admin-input" type="number" placeholder="Price ₹" value={size.price} onChange={(e) => updateSize(index, "price", e.target.value)} />
+                {form.sizes.length > 1 ? (
+                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => removeSize(index)} aria-label="Remove size">
+                    <Trash2 size={14} />
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ))}
+          <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={addSize}>
+            Add size variant
+          </button>
+
+          <p className="admin-card-section-title">Media</p>
           <AdminMediaUpload
             label="Catalog main image"
             value={form.productImage}
@@ -250,13 +376,19 @@ export default function ProductsAdmin({ products, categories }) {
             onChange={(url) => setForm({ ...form, layersImage: url })}
             folder={`products/${form.slug || "new"}/layers`}
           />
+
+          <p className="admin-card-section-title">SEO</p>
           <div>
-            <label className="admin-label">Payload (JSON)</label>
-            <textarea className="admin-textarea font-mono text-xs" value={form.payloadJson} onChange={(e) => setForm({ ...form, payloadJson: e.target.value })} />
+            <label className="admin-label">SEO title</label>
+            <input className="admin-input" value={form.seo_title} onChange={(e) => setForm({ ...form, seo_title: e.target.value })} />
           </div>
+          <div>
+            <label className="admin-label">SEO description</label>
+            <textarea className="admin-textarea min-h-[72px]" value={form.seo_description} onChange={(e) => setForm({ ...form, seo_description: e.target.value })} />
+          </div>
+
           <button type="submit" disabled={pending} className="admin-btn admin-btn-primary w-full">
-            <Plus size={16} strokeWidth={1.5} />
-            {pending ? "Saving…" : "Save product"}
+            {pending ? "Saving…" : form.id ? "Update product" : "Create product"}
           </button>
         </div>
       </form>
