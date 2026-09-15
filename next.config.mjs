@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ["pdf-parse"],
+  serverActions: {
+    bodySizeLimit: "4mb",
+  },
   images: {
     unoptimized: true,
     remotePatterns: [
