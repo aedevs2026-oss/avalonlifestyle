@@ -27,7 +27,7 @@ function FeaturedCard({ product }) {
           alt={`${product.name} mattress`}
           fill
           className="featured-product-card__img"
-          sizes="(max-width: 768px) 85vw, 260px"
+          sizes="(max-width: 640px) 88vw, (max-width: 1024px) 42vw, 280px"
         />
       </div>
       <div className="featured-product-card__footer">

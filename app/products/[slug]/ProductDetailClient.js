@@ -31,8 +31,8 @@ const layers = [
   "Base Support Foam",
 ];
 
-export default function ProductDetailClient({ slug }) {
-  const product = getProductBySlug(slug);
+export default function ProductDetailClient({ slug, initialProduct, catalogProducts }) {
+  const product = initialProduct ?? getProductBySlug(slug);
   const [activeTab, setActiveTab] = useState("Overview");
   const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0]?.id);
   const [activeImage, setActiveImage] = useState(0);
@@ -79,7 +79,8 @@ export default function ProductDetailClient({ slug }) {
     assets.singleProduct.lifestyle,
   ].filter(Boolean);
 
-  const related = products.filter((p) => p.slug !== slug).slice(0, 4);
+  const catalog = catalogProducts ?? products;
+  const related = catalog.filter((p) => p.slug !== slug).slice(0, 4);
 
   const reviews = [
     { title: "Best mattress I've ever owned", rating: 5, text: "The Prince mattress transformed my sleep. No more back pain!", author: "Ramesh K.", location: "Chennai", date: "Jan 2024" },
@@ -101,34 +102,61 @@ export default function ProductDetailClient({ slug }) {
 
           <div className="grid lg:grid-cols-2 gap-10 mt-8">
             {/* Gallery */}
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <div className="hidden sm:flex flex-col gap-3">
                 {gallery.map((img, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => setActiveImage(i)}
-                    className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 ${activeImage === i ? "border-avalon-red" : "border-avalon-border"}`}
+                    className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-white ${activeImage === i ? "border-avalon-red" : "border-avalon-border"}`}
                     aria-label={`View image ${i + 1}`}
                   >
-                    <Image src={img} alt="" fill className="object-cover" sizes="64px" />
+                    <Image
+                      src={img}
+                      alt=""
+                      fill
+                      className="object-contain object-center p-1"
+                      sizes="64px"
+                    />
                   </button>
                 ))}
               </div>
-              <div className="relative flex-1 aspect-square rounded-2xl overflow-hidden bg-avalon-soft">
-                <Image
-                  src={gallery[activeImage]}
-                  alt={`${product.name} mattress`}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                />
-                {product.badge && (
-                  <span className="absolute top-4 left-4 bg-avalon-red text-white text-xs font-bold px-3 py-1 rounded">
-                    {product.badge}
-                  </span>
-                )}
+              <div className="min-w-0 flex-1">
+                <div className="relative aspect-square overflow-hidden rounded-2xl bg-white ring-1 ring-avalon-border/60">
+                  <Image
+                    src={gallery[activeImage]}
+                    alt={`${product.name} mattress`}
+                    fill
+                    className="object-contain object-center p-4 sm:p-6 md:p-8"
+                    priority
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 45vw"
+                  />
+                  {product.badge && (
+                    <span className="absolute top-4 left-4 rounded bg-avalon-red px-3 py-1 text-xs font-bold text-white">
+                      {product.badge}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1 sm:hidden">
+                  {gallery.map((img, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setActiveImage(i)}
+                      className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 bg-white ${activeImage === i ? "border-avalon-red" : "border-avalon-border"}`}
+                      aria-label={`View image ${i + 1}`}
+                    >
+                      <Image
+                        src={img}
+                        alt=""
+                        fill
+                        className="object-contain object-center p-1"
+                        sizes="56px"
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -309,7 +337,7 @@ export default function ProductDetailClient({ slug }) {
                     src={product.layersImage}
                     alt={`${product.name} mattress layers`}
                     fill
-                    className="object-contain p-3"
+                    className="object-contain object-center p-3 sm:p-4"
                     sizes="(max-width: 1024px) 100vw, 40vw"
                   />
                 </div>

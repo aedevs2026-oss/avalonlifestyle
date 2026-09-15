@@ -60,11 +60,11 @@
   }
 
   .featured-product-card__img {
-    transform: scale(1.04);
+    padding: 0.5rem;
   }
 
   .featured-product-card:hover .featured-product-card__img {
-    transform: scale(1.06);
+    transform: none;
   }
 
   /* Softer card lift on touch devices */

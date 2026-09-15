@@ -85,7 +85,8 @@ export default function SplashScreen() {
         preload="auto"
         onEnded={dismiss}
       >
-        <source src={assets.brand.splashVideo} type="video/mp4" />
+        <source src={assets.brand.splashVideo.web} type="video/mp4" media="(min-width: 1024px)" />
+        <source src={assets.brand.splashVideo.mobile} type="video/mp4" />
       </video>
 
       <button

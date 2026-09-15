@@ -8,32 +8,14 @@ import Button from "@/components/ui/Button";
 import { ProductGrid } from "@/components/sections/ProductCard";
 import { FAQSection } from "@/components/sections/FAQSection";
 import { assets } from "@/lib/assets";
-import { mattressCollectionOrder, products } from "@/lib/products";
-
-/** Categories shown on the Mattresses filter bar (matches matters.png). */
-const FILTER_CATEGORIES = [
-  "All Mattresses",
-  "Pocket Spring",
-  "Memory Foam",
-  "Latex",
-  "Gel Memory Foam",
-  "Ortho Support",
-];
+import { staticCategoryImages } from "@/lib/cms/categories";
+import { mattressCollectionOrder, products as staticProducts, mattressCategories as staticCategories } from "@/lib/products";
 
 const trustItems = [
   { icon: assets.listing.leaf, title: "Premium Materials" },
   { icon: assets.listing.shield, title: "10 Years Warranty" },
   { icon: assets.listing.heart, title: "Loved by Thousands" },
 ];
-
-const categoryImages = {
-  "All Mattresses": assets.products.prince,
-  "Pocket Spring": assets.products.king,
-  "Memory Foam": assets.products.celeste,
-  Latex: assets.products.brittany,
-  "Gel Memory Foam": assets.products.prada,
-  "Ortho Support": assets.products.magna,
-};
 
 const philosophyFeatures = [
   { icon: assets.singleProduct.breathable, title: "Skin Friendly Fabrics" },
@@ -125,7 +107,14 @@ function matchesCategory(product, category) {
   return product.type === category;
 }
 
-export default function MattressesClient() {
+export default function MattressesClient({
+  products: productsProp,
+  mattressCategories: categoriesProp,
+  categoryImages: categoryImagesProp,
+}) {
+  const products = productsProp ?? staticProducts;
+  const filterCategories = categoriesProp ?? staticCategories;
+  const categoryImages = categoryImagesProp ?? staticCategoryImages;
   const [activeCategory, setActiveCategory] = useState("All Mattresses");
 
   const filtered = useMemo(() => {
@@ -134,7 +123,7 @@ export default function MattressesClient() {
     return mattressCollectionOrder
       .map((slug) => list.find((p) => p.slug === slug))
       .filter(Boolean);
-  }, [activeCategory]);
+  }, [activeCategory, products]);
 
   return (
     <>
@@ -180,7 +169,7 @@ export default function MattressesClient() {
             role="tablist"
             aria-label="Mattress types"
           >
-            {FILTER_CATEGORIES.map((cat) => {
+            {filterCategories.map((cat) => {
               const active = activeCategory === cat;
               return (
                 <button
@@ -201,11 +190,12 @@ export default function MattressesClient() {
                     }`}
                   >
                     <Image
-                      src={categoryImages[cat]}
+                      src={categoryImages[cat] || staticCategoryImages[cat] || assets.products.prince}
                       alt=""
                       fill
                       className="object-contain object-center p-0.5"
                       sizes="48px"
+                      unoptimized={Boolean(categoryImages[cat]?.includes("supabase.co"))}
                     />
                   </span>
                   <span className="text-[10px] leading-snug font-semibold sm:text-[11px]">

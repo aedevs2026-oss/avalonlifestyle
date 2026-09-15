@@ -1,0 +1,204 @@
+.admin-root {
+  --admin-bg: #0c0e14;
+  --admin-panel: #12151f;
+  --admin-panel-elevated: #181c28;
+  --admin-border: rgba(255, 255, 255, 0.08);
+  --admin-gold: #c9a962;
+  --admin-text: #f4f2ee;
+  --admin-muted: #9ca3af;
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(237, 28, 36, 0.12), transparent),
+    radial-gradient(900px 500px at 100% 0%, rgba(201, 169, 98, 0.08), transparent),
+    var(--admin-bg);
+  color: var(--admin-text);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.admin-shell {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 280px 1fr;
+}
+
+@media (max-width: 1023px) {
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-sidebar {
+  border-right: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(18, 21, 31, 0.98), rgba(12, 14, 20, 0.98));
+  padding: 1.5rem 1.25rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-brand img {
+  height: 36px;
+  width: auto;
+}
+
+.admin-brand span {
+  display: block;
+  font-family: var(--font-playfair), serif;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.admin-brand small {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--admin-gold);
+}
+
+.admin-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.65rem;
+  color: var(--admin-muted);
+  font-size: 0.875rem;
+  transition: background 0.2s, color 0.2s;
+}
+
+.admin-nav a:hover,
+.admin-nav a[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--admin-text);
+}
+
+.admin-nav a[aria-current="page"] {
+  box-shadow: inset 2px 0 0 var(--avalon-red);
+}
+
+.admin-main {
+  padding: 1.5rem clamp(1rem, 3vw, 2.5rem) 2.5rem;
+}
+
+.admin-card {
+  background: rgba(24, 28, 40, 0.72);
+  border: 1px solid var(--admin-border);
+  border-radius: 1rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+
+.admin-card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-card-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.admin-stat {
+  padding: 1.25rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-stat strong {
+  display: block;
+  font-size: 1.75rem;
+  font-family: var(--font-playfair), serif;
+}
+
+.admin-input,
+.admin-textarea,
+.admin-select {
+  width: 100%;
+  border-radius: 0.65rem;
+  border: 1px solid var(--admin-border);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--admin-text);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.875rem;
+}
+
+.admin-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.admin-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--admin-muted);
+  margin-bottom: 0.35rem;
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.admin-btn-primary {
+  background: linear-gradient(135deg, var(--avalon-red), #b9151c);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(237, 28, 36, 0.25);
+}
+
+.admin-btn-ghost {
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
+  background: transparent;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--admin-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-table th {
+  color: var(--admin-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.68rem;
+}
+
+.admin-login-wrap {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.admin-login-card {
+  width: min(420px, 100%);
+}

@@ -33,8 +33,8 @@ export default function ProductCard({
                 src={product.image || assets.singleProduct.main}
                 alt={`${product.name} mattress`}
                 fill
-                className="object-contain object-center p-4 transition-transform duration-500 group-hover:scale-[1.02] sm:p-5"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                className="object-contain object-center p-2 transition-transform duration-500 group-hover:scale-[1.02] sm:p-4 md:p-5"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
               />
               {product.badge && (
                 <span
@@ -53,8 +53,8 @@ export default function ProductCard({
               src={product.image || assets.singleProduct.main}
               alt={`${product.name} mattress`}
               fill
-              className="object-contain object-center p-4 transition-transform duration-500 group-hover:scale-[1.03]"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+              className="object-contain object-center p-2 transition-transform duration-500 group-hover:scale-[1.02] sm:p-4 md:p-5"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
             />
             {product.badge && (
               <span

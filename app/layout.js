@@ -1,10 +1,7 @@
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import "./mobile-tablet.css";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import NearStoreWelcome from "@/components/location/NearStoreWelcome";
-import SplashScreen from "@/components/layout/SplashScreen";
+import SiteChrome from "@/components/layout/SiteChrome";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -36,11 +33,7 @@ export default function RootLayout({ children }) {
       className={`${playfair.variable} ${dmSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white text-avalon-black">
-        <SplashScreen />
-        <Header />
-        <main className="flex-1 min-w-0 max-lg:overflow-x-clip">{children}</main>
-        <Footer />
-        <NearStoreWelcome />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );

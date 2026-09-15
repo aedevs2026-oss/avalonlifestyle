@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import PageHero from "@/components/sections/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -48,9 +48,27 @@ function readInitialSelectedDealerId() {
 }
 
 export default function FindDealerClient() {
+  const [dealerList, setDealerList] = useState(dealers);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedId, setSelectedId] = useState(readInitialSelectedDealerId);
+  const [selectedId, setSelectedId] = useState(() => readInitialSelectedDealerId());
   const [userLocation, setUserLocation] = useState(() => readStoredUserLocation());
+
+  useEffect(() => {
+    fetch("/api/dealers")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.dealers?.length) {
+          setDealerList(data.dealers);
+          setSelectedId((current) => {
+            if (data.dealers.some((d) => d.id === current)) return current;
+            return data.dealers[0]?.id ?? null;
+          });
+        }
+      })
+      .catch(() => {
+        /* keep static fallback */
+      });
+  }, []);
   const [radiusKm, setRadiusKm] = useState(25);
   const [sortBy, setSortBy] = useState(() =>
     readStoredUserLocation() ? "distance" : "distance",
@@ -58,7 +76,7 @@ export default function FindDealerClient() {
   const [locating, setLocating] = useState(false);
 
   const enriched = useMemo(() => {
-    return dealers.map((dealer) => {
+    return dealerList.map((dealer) => {
       let distanceKm = null;
       if (userLocation && dealer.lat != null && dealer.lng != null) {
         distanceKm = haversineKm(
@@ -70,7 +88,7 @@ export default function FindDealerClient() {
       }
       return { ...dealer, distanceKm };
     });
-  }, [userLocation]);
+  }, [dealerList, userLocation]);
 
   const filteredDealers = useMemo(() => {
     let list = enriched;

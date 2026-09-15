@@ -1,39 +1,43 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
+import { resolveClientLocation } from "@/lib/forms/clientLocation";
 import PageHero, { CTABanner } from "@/components/sections/PageHero";
 import Button from "@/components/ui/Button";
 import FormField from "@/components/ui/FormField";
 import { FAQSection } from "@/components/sections/FAQSection";
 import { assets } from "@/lib/assets";
-import { siteConfig } from "@/lib/site";
+import { siteConfig as defaultSiteConfig } from "@/lib/site";
 
-const contactCards = [
-  {
-    icon: assets.findDealer.phone,
-    title: "Call Us",
-    value: siteConfig.phone,
-    note: "Mon – Sat, 9 AM – 6 PM",
-  },
-  {
-    icon: assets.findDealer.email,
-    title: "Email Us",
-    value: siteConfig.email,
-    note: "We reply within 24 hours",
-  },
-  {
-    icon: assets.findDealer.location,
-    title: "Visit Us",
-    value: siteConfig.address,
-    note: "Our office location",
-  },
-  {
-    icon: assets.contact.messageDots,
-    title: "Live Support",
-    value: "Chat with our team",
-    note: "Mon – Sat, 9 AM – 6 PM",
-  },
-];
+function buildContactCards(siteConfig) {
+  return [
+    {
+      icon: assets.findDealer.phone,
+      title: "Call Us",
+      value: siteConfig.phone,
+      note: "Mon – Sat, 9 AM – 6 PM",
+    },
+    {
+      icon: assets.findDealer.email,
+      title: "Email Us",
+      value: siteConfig.email,
+      note: "We reply within 24 hours",
+    },
+    {
+      icon: assets.findDealer.location,
+      title: "Visit Us",
+      value: siteConfig.address,
+      note: "Our office location",
+    },
+    {
+      icon: assets.contact.messageDots,
+      title: "Live Support",
+      value: "Chat with our team",
+      note: "Mon – Sat, 9 AM – 6 PM",
+    },
+  ];
+}
 
 const officeBenefits = [
   {
@@ -81,12 +85,58 @@ const contactFaq = [
   },
 ];
 
-export default function ContactClient() {
-  function handleSubmit(e) {
+export default function ContactClient({ siteConfig = defaultSiteConfig }) {
+  const contactCards = buildContactCards(siteConfig);
+  const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    alert(
-      "Thank you for your message. Our team will get back to you within 24 hours.",
-    );
+    setFeedback(null);
+    setSubmitting(true);
+
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    const clientLocation = await resolveClientLocation();
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.get("name"),
+          email: data.get("email"),
+          phone: data.get("phone"),
+          city: data.get("city"),
+          subject: data.get("subject"),
+          message: data.get("message"),
+          source_page: "/contact",
+          clientLocation,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Unable to send message.");
+      }
+
+      const dealerHint =
+        json.nearestDealers?.length
+          ? ` We suggested ${json.nearestDealers.length} nearby dealer(s) to our team.`
+          : "";
+
+      setFeedback({
+        type: "success",
+        text: `Thank you for your message. Our team will get back to you within 24 hours.${dealerHint}`,
+      });
+      form.reset();
+    } catch (err) {
+      setFeedback({
+        type: "error",
+        text: err.message || "Something went wrong. Please call us directly.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -144,6 +194,18 @@ export default function ContactClient() {
               Get in Touch
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {feedback ? (
+                <p
+                  className={`rounded-lg px-3 py-2 text-sm ${
+                    feedback.type === "success"
+                      ? "border border-green-200 bg-green-50 text-green-900"
+                      : "border border-red-200 bg-red-50 text-red-900"
+                  }`}
+                  role="status"
+                >
+                  {feedback.text}
+                </p>
+              ) : null}
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   label="Your Name"
@@ -189,8 +251,8 @@ export default function ContactClient() {
                 required
                 placeholder="How can we help you?"
               />
-              <Button type="submit" className="mt-2 w-full sm:w-auto">
-                Send Message
+              <Button type="submit" className="mt-2 w-full sm:w-auto" disabled={submitting}>
+                {submitting ? "Sending…" : "Send Message"}
               </Button>
             </form>
           </div>

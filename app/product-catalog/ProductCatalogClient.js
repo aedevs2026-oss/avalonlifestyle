@@ -7,7 +7,7 @@ import Breadcrumb from "@/components/ui/Breadcrumb";
 import Button from "@/components/ui/Button";
 import { ProductGrid } from "@/components/sections/ProductCard";
 import { assets } from "@/lib/assets";
-import { products } from "@/lib/products";
+import { products as staticProducts } from "@/lib/products";
 
 const trustItems = [
   { icon: assets.listing.delivery, title: "Free Delivery", description: "On all orders" },
@@ -28,7 +28,8 @@ const productTypes = [
 const sizes = ["Single", "Queen", "King", "Custom"];
 const firmness = ["Soft", "Medium", "Firm", "Extra Firm"];
 
-export default function ProductCatalogClient() {
+export default function ProductCatalogClient({ products: productsProp }) {
+  const products = productsProp ?? staticProducts;
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState("grid");
   const [selectedType, setSelectedType] = useState("All Mattresses");

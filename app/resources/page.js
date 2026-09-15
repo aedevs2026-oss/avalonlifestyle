@@ -7,6 +7,7 @@ import ResourcesDownloadCard from "@/components/resources/ResourcesDownloadCard"
 import ResourcesSectionHeader from "@/components/resources/ResourcesSectionHeader";
 import { assets } from "@/lib/assets";
 import { faqItems } from "@/lib/site";
+import { getResourceDownloads } from "@/lib/cms/resources";
 
 export const metadata = {
   title: "Resources",
@@ -51,14 +52,6 @@ const resourceTypes = [
     description: "Answers to common questions",
     href: "#faq",
   },
-];
-
-const downloads = [
-  { title: "Product Catalogue 2024", size: "12.5 MB", image: assets.products.prince },
-  { title: "Mattress Collection Brochure", size: "8.2 MB", image: assets.products.king },
-  { title: "Furniture Collection Brochure", size: "6.4 MB", image: assets.home.sofa },
-  { title: "Materials & Technology Guide", size: "4.2 MB", image: assets.mattresses.detail },
-  { title: "Warranty Information", size: "2.1 MB", image: assets.home.manufacturing },
 ];
 
 const guides = [
@@ -106,7 +99,8 @@ const videos = [
   },
 ];
 
-export default function ResourcesPage() {
+export default async function ResourcesPage() {
+  const downloads = await getResourceDownloads();
   return (
     <div className="resources-page">
       <PageHero
@@ -167,7 +161,7 @@ export default function ResourcesPage() {
             <div className="mobile-scroll-rail__track gap-3 sm:gap-4 md:grid md:w-full md:max-w-none md:grid-cols-3 md:gap-4 lg:grid-cols-5">
               {downloads.map((dl) => (
                 <div
-                  key={dl.title}
+                  key={dl.id || dl.title}
                   className="w-[9.25rem] shrink-0 sm:w-[10.5rem] md:w-auto md:shrink"
                 >
                   <ResourcesDownloadCard {...dl} />

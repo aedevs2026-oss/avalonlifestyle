@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import PageHero, { CTABanner } from "@/components/sections/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -31,9 +32,45 @@ const dealerFaq = [
 ];
 
 export default function BecomeDealerClient() {
-  function handleSubmit(e) {
+  const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    alert("Thank you for your enquiry! Our partnership team will contact you within 48 hours.");
+    setFeedback(null);
+    setSubmitting(true);
+    const form = e.currentTarget;
+    const data = new FormData(form);
+
+    try {
+      const res = await fetch("/api/dealer-enquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.get("name"),
+          business: data.get("business"),
+          email: data.get("email"),
+          phone: data.get("phone"),
+          city: data.get("city"),
+          businessType: data.get("businessType"),
+          message: data.get("message"),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Unable to submit enquiry.");
+      setFeedback({
+        type: "success",
+        text: "Thank you for your enquiry! Our partnership team will contact you within 48 hours.",
+      });
+      form.reset();
+    } catch (err) {
+      setFeedback({
+        type: "error",
+        text: err.message || "Please try again or email us directly.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -70,6 +107,18 @@ export default function BecomeDealerClient() {
             <span className="label-red">DEALER ENQUIRY</span>
             <h2 className="font-serif text-3xl mt-3 mb-6">Let&apos;s Grow Together</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {feedback ? (
+                <p
+                  className={`rounded-lg px-3 py-2 text-sm ${
+                    feedback.type === "success"
+                      ? "border border-green-200 bg-green-50 text-green-900"
+                      : "border border-red-200 bg-red-50 text-red-900"
+                  }`}
+                  role="status"
+                >
+                  {feedback.text}
+                </p>
+              ) : null}
               <div className="grid sm:grid-cols-2 gap-4">
                 <FormField label="Your Name" name="name" required placeholder="Full name" />
                 <FormField label="Business Name" name="business" required placeholder="Company name" />
@@ -90,7 +139,9 @@ export default function BecomeDealerClient() {
                 />
               </div>
               <FormField label="Tell Us More (Optional)" name="message" as="textarea" placeholder="Share details about your business..." />
-              <Button type="submit">Submit Enquiry</Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Submitting…" : "Submit Enquiry"}
+              </Button>
             </form>
           </div>
 
