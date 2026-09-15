@@ -79,7 +79,7 @@ export default function AdminMediaUpload({
           </button>
         ) : null}
       </div>
-      {error ? <p className="text-xs text-red-300">{error}</p> : null}
+      {error ? <p className="text-xs text-red-600">{error}</p> : null}
       {showPreview && value && isImage ? (
         <div className="relative mt-2 h-24 w-32 overflow-hidden rounded-lg border border-[var(--admin-border)] bg-black/20">
           <Image src={value} alt="" fill className="object-contain p-1" unoptimized />

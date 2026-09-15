@@ -30,7 +30,7 @@ export default async function AdminDashboardPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => (
-            <Link key={card.label} href={card.href} className="admin-stat transition hover:border-[var(--admin-gold)]">
+            <Link key={card.label} href={card.href} className="admin-stat">
               <strong>{card.value}</strong>
               <span className="text-sm text-[var(--admin-muted)]">{card.label}</span>
             </Link>

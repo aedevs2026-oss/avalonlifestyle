@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "node scripts/seed-supabase.mjs"
+    "seed": "node scripts/seed-supabase.mjs",
+    "grant-admin": "node scripts/grant-admin.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

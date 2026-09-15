@@ -1,15 +1,18 @@
+/* Avalon Admin — light luxury theme (matches public site) */
+
 .admin-root {
-  --admin-bg: #0c0e14;
-  --admin-panel: #12151f;
-  --admin-panel-elevated: #181c28;
-  --admin-border: rgba(255, 255, 255, 0.08);
-  --admin-gold: #c9a962;
-  --admin-text: #f4f2ee;
-  --admin-muted: #9ca3af;
+  --admin-bg: #f7f7f6;
+  --admin-surface: #ffffff;
+  --admin-surface-soft: #f8f6f3;
+  --admin-border: #e4e5e8;
+  --admin-accent: #ed1c24;
+  --admin-accent-soft: #fff0f0;
+  --admin-text: #111318;
+  --admin-muted: #6b7280;
+  --admin-shadow: 0 4px 24px rgba(17, 19, 24, 0.06);
+  --admin-shadow-lg: 0 12px 40px rgba(17, 19, 24, 0.08);
   min-height: 100vh;
-  background: radial-gradient(1200px 600px at 10% -10%, rgba(237, 28, 36, 0.12), transparent),
-    radial-gradient(900px 500px at 100% 0%, rgba(201, 169, 98, 0.08), transparent),
-    var(--admin-bg);
+  background: linear-gradient(180deg, #ffffff 0%, var(--admin-bg) 42%, var(--admin-bg) 100%);
   color: var(--admin-text);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
@@ -28,12 +31,13 @@
 
 .admin-sidebar {
   border-right: 1px solid var(--admin-border);
-  background: linear-gradient(180deg, rgba(18, 21, 31, 0.98), rgba(12, 14, 20, 0.98));
+  background: var(--admin-surface);
   padding: 1.5rem 1.25rem;
   position: sticky;
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  box-shadow: 2px 0 24px rgba(17, 19, 24, 0.03);
 }
 
 .admin-brand {
@@ -55,6 +59,7 @@
   font-family: var(--font-playfair), serif;
   font-size: 1.05rem;
   line-height: 1.2;
+  color: var(--admin-text);
 }
 
 .admin-brand small {
@@ -62,7 +67,8 @@
   font-size: 0.65rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--admin-gold);
+  color: var(--admin-accent);
+  font-weight: 600;
 }
 
 .admin-nav a {
@@ -73,34 +79,39 @@
   border-radius: 0.65rem;
   color: var(--admin-muted);
   font-size: 0.875rem;
+  font-weight: 500;
   transition: background 0.2s, color 0.2s;
 }
 
-.admin-nav a:hover,
-.admin-nav a[aria-current="page"] {
-  background: rgba(255, 255, 255, 0.06);
+.admin-nav a:hover {
+  background: var(--admin-accent-soft);
   color: var(--admin-text);
 }
 
 .admin-nav a[aria-current="page"] {
-  box-shadow: inset 2px 0 0 var(--avalon-red);
+  background: var(--admin-accent-soft);
+  color: var(--admin-accent);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--admin-accent);
 }
 
 .admin-main {
   padding: 1.5rem clamp(1rem, 3vw, 2.5rem) 2.5rem;
+  background: transparent;
 }
 
 .admin-card {
-  background: rgba(24, 28, 40, 0.72);
+  background: var(--admin-surface);
   border: 1px solid var(--admin-border);
   border-radius: 1rem;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--admin-shadow);
 }
 
 .admin-card-header {
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, #fff 0%, var(--admin-surface-soft) 100%);
+  border-radius: 1rem 1rem 0 0;
 }
 
 .admin-card-body {
@@ -111,13 +122,21 @@
   padding: 1.25rem;
   border-radius: 0.85rem;
   border: 1px solid var(--admin-border);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-stat:hover {
+  border-color: rgba(237, 28, 36, 0.25);
+  box-shadow: var(--admin-shadow-lg);
 }
 
 .admin-stat strong {
   display: block;
   font-size: 1.75rem;
   font-family: var(--font-playfair), serif;
+  color: var(--admin-text);
 }
 
 .admin-input,
@@ -126,10 +145,19 @@
   width: 100%;
   border-radius: 0.65rem;
   border: 1px solid var(--admin-border);
-  background: rgba(0, 0, 0, 0.25);
+  background: #fff;
   color: var(--admin-text);
   padding: 0.65rem 0.85rem;
   font-size: 0.875rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.admin-input:focus,
+.admin-textarea:focus,
+.admin-select:focus {
+  outline: none;
+  border-color: rgba(237, 28, 36, 0.45);
+  box-shadow: 0 0 0 3px rgba(237, 28, 36, 0.08);
 }
 
 .admin-textarea {
@@ -139,11 +167,12 @@
 
 .admin-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--admin-muted);
   margin-bottom: 0.35rem;
+  font-weight: 600;
 }
 
 .admin-btn {
@@ -155,19 +184,28 @@
   padding: 0.6rem 1.25rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  transition: transform 0.15s, box-shadow 0.2s;
+  transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
 }
 
 .admin-btn-primary {
-  background: linear-gradient(135deg, var(--avalon-red), #b9151c);
+  background: var(--admin-accent);
   color: #fff;
-  box-shadow: 0 8px 24px rgba(237, 28, 36, 0.25);
+  box-shadow: 0 6px 20px rgba(237, 28, 36, 0.22);
+}
+
+.admin-btn-primary:hover:not(:disabled) {
+  background: #d91920;
 }
 
 .admin-btn-ghost {
   border: 1px solid var(--admin-border);
   color: var(--admin-text);
-  background: transparent;
+  background: #fff;
+}
+
+.admin-btn-ghost:hover:not(:disabled) {
+  border-color: rgba(237, 28, 36, 0.3);
+  color: var(--admin-accent);
 }
 
 .admin-table {
@@ -190,6 +228,11 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 0.68rem;
+  background: var(--admin-surface-soft);
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(237, 28, 36, 0.02);
 }
 
 .admin-login-wrap {
@@ -197,8 +240,46 @@
   display: grid;
   place-items: center;
   padding: 2rem;
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(237, 28, 36, 0.06), transparent),
+    var(--admin-bg);
 }
 
 .admin-login-card {
-  width: min(420px, 100%);
+  width: min(440px, 100%);
+  box-shadow: var(--admin-shadow-lg);
+}
+
+.admin-login-card .admin-card-header h1 {
+  font-family: var(--font-playfair), serif;
+  color: var(--admin-text);
+}
+
+.admin-alert-error {
+  border-radius: 0.65rem;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.875rem;
+}
+
+.admin-alert-info {
+  border-radius: 0.65rem;
+  border: 1px solid #e4e5e8;
+  background: var(--admin-surface-soft);
+  color: var(--admin-muted);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.admin-message-ok {
+  color: var(--admin-accent);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Legacy variable aliases used in components */
+.admin-root {
+  --admin-gold: var(--admin-accent);
 }

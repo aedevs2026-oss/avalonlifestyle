@@ -45,6 +45,11 @@ export default function AdminLoginForm({ nextPath, errorCode }) {
     }
   }
 
+  const setupHint =
+    errorCode === "forbidden"
+      ? "Your Supabase login works, but this user is not in admin_profiles yet. Run: npm run grant-admin -- your@email.com \"Your Name\""
+      : "";
+
   return (
     <div className="admin-login-wrap">
       <div className="admin-login-card admin-card">
@@ -56,17 +61,16 @@ export default function AdminLoginForm({ nextPath, errorCode }) {
             height={42}
             className="mx-auto mb-3"
           />
-          <h1 className="font-serif text-2xl">Admin Sign In</h1>
+          <h1 className="font-serif text-2xl text-avalon-black">Admin Sign In</h1>
           <p className="mt-2 text-sm text-[var(--admin-muted)]">
             Secure access for catalogue, dealers, and customer enquiries.
           </p>
         </div>
         <form onSubmit={onSubmit} className="admin-card-body space-y-4">
           {(configError || error) && (
-            <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-              {configError || error}
-            </p>
+            <p className="admin-alert-error">{configError || error}</p>
           )}
+          {setupHint ? <p className="admin-alert-info">{setupHint}</p> : null}
           <div>
             <label className="admin-label" htmlFor="admin-email">Email</label>
             <input
@@ -114,7 +118,7 @@ export default function AdminLoginForm({ nextPath, errorCode }) {
             Forgot password?
           </button>
           {resetSent ? (
-            <p className="text-xs text-[var(--admin-gold)]">Password reset email sent if the account exists.</p>
+            <p className="admin-message-ok text-xs">Password reset email sent if the account exists.</p>
           ) : null}
         </form>
       </div>

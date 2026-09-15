@@ -41,23 +41,28 @@ SMTP_PASSWORD=your-16-char-google-app-password
 
 Use **Send SMTP test** on the settings page to verify.
 
-## 3. Create an admin user (strong credentials)
+## 3. Create an admin user (Supabase Authentication)
 
-1. In Supabase **Authentication → Users**, create a user with a **strong unique password** (password manager recommended).
-2. Copy the user UUID.
-3. In SQL Editor:
+1. In Supabase **Authentication → Users** → **Add user** → **Create new user**.
+   - Enter the admin email and a **strong password** (or send invite).
+   - Confirm the user if your project requires email confirmation.
+2. Link that Auth user to the admin panel (required — login alone is not enough):
 
-```sql
-insert into public.admin_profiles (user_id, email, full_name, role)
-values (
-  'YOUR-USER-UUID-HERE',
-  'admin@yourcompany.com',
-  'Avalon Admin',
-  'admin'
-);
+**Option A — CLI (easiest)**
+
+```bash
+npm run grant-admin -- your@email.com "Your Name"
 ```
 
-Only users listed in `admin_profiles` can access `/admin` (enforced in middleware and RLS).
+**Option B — SQL**
+
+Copy the user UUID from Authentication → Users, then run `supabase/snippets/grant_admin_user.sql` (fill in UUID and email).
+
+3. Sign in at **`/admin/login`** with the same email and password.
+
+If you see *“not authorized for admin access”*, the Auth user exists but `admin_profiles` is missing — run step 2 again.
+
+Only users in `admin_profiles` can access `/admin` (middleware + RLS).
 
 ## 4. Seed entire frontend into Supabase (recommended)
 
