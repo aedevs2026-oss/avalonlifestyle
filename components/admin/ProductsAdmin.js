@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Plus, Search, Trash2 } from "lucide-react";
 import { deleteProduct, upsertProduct } from "@/lib/admin/actions";
 import {
@@ -10,6 +9,8 @@ import {
   emptyProductForm,
   productRowToForm,
 } from "@/lib/admin/productForm";
+import { useAdminCrud } from "@/lib/admin/useAdminCrud";
+import AdminFeedback from "@/components/admin/AdminFeedback";
 import AdminMediaUpload from "@/components/admin/AdminMediaUpload";
 import AdminStatusBadge from "@/components/admin/AdminStatusBadge";
 
@@ -23,12 +24,9 @@ function formatPrice(payload) {
 }
 
 export default function ProductsAdmin({ products, categories }) {
-  const router = useRouter();
   const [form, setForm] = useState(emptyProductForm());
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [query, setQuery] = useState("");
-  const [pending, startTransition] = useTransition();
+  const { busy, message, error, run, clearFeedback } = useAdminCrud();
 
   const categoryById = useMemo(
     () => new Map(categories.map((c) => [c.id, c.name])),
@@ -48,14 +46,12 @@ export default function ProductsAdmin({ products, categories }) {
 
   function startNew() {
     setForm(emptyProductForm());
-    setMessage("");
-    setError("");
+    clearFeedback();
   }
 
   function edit(row) {
     setForm(productRowToForm(row));
-    setMessage("");
-    setError("");
+    clearFeedback();
   }
 
   function onCategoryChange(categoryId) {
@@ -89,38 +85,19 @@ export default function ProductsAdmin({ products, categories }) {
     }));
   }
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
-    setMessage("");
-    setError("");
-    startTransition(async () => {
-      try {
-        await upsertProduct(form);
-        setMessage(form.id ? "Product updated." : "Product created.");
-        if (!form.id) {
-          setForm(emptyProductForm());
-        }
-        router.refresh();
-      } catch (err) {
-        setError(err.message || "Save failed.");
-      }
-    });
+    const ok = await run(
+      () => upsertProduct(form),
+      form.id ? "Product updated." : "Product created.",
+    );
+    if (ok && !form.id) setForm(emptyProductForm());
   }
 
-  function remove(id) {
+  async function remove(id) {
     if (!window.confirm("Delete this product permanently?")) return;
-    setMessage("");
-    setError("");
-    startTransition(async () => {
-      try {
-        await deleteProduct(id);
-        if (form.id === id) setForm(emptyProductForm());
-        setMessage("Product deleted.");
-        router.refresh();
-      } catch (err) {
-        setError(err.message || "Delete failed.");
-      }
-    });
+    const ok = await run(() => deleteProduct(id), "Product deleted.");
+    if (ok && form.id === id) setForm(emptyProductForm());
   }
 
   return (
@@ -223,8 +200,7 @@ export default function ProductsAdmin({ products, categories }) {
           <h2>{form.id ? "Edit product" : "New product"}</h2>
         </div>
         <div className="admin-card-body space-y-4">
-          {error ? <p className="admin-alert-error">{error}</p> : null}
-          {message ? <p className="admin-message-ok">{message}</p> : null}
+          <AdminFeedback error={error} message={message} />
 
           <p className="admin-card-section-title">Identity</p>
           <div className="admin-form-grid admin-form-grid-2">
@@ -387,8 +363,8 @@ export default function ProductsAdmin({ products, categories }) {
             <textarea className="admin-textarea min-h-[72px]" value={form.seo_description} onChange={(e) => setForm({ ...form, seo_description: e.target.value })} />
           </div>
 
-          <button type="submit" disabled={pending} className="admin-btn admin-btn-primary w-full">
-            {pending ? "Saving…" : form.id ? "Update product" : "Create product"}
+          <button type="submit" disabled={busy} className="admin-btn admin-btn-primary w-full">
+            {busy ? "Saving…" : form.id ? "Update product" : "Create product"}
           </button>
         </div>
       </form>

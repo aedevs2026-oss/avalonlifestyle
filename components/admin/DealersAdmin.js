@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { Plus } from "lucide-react";
 import { deleteDealer, upsertDealer } from "@/lib/admin/actions";
+import { useAdminCrud } from "@/lib/admin/useAdminCrud";
+import AdminFeedback from "@/components/admin/AdminFeedback";
 
 const empty = {
   id: "",
@@ -25,69 +28,146 @@ const empty = {
   is_active: true,
 };
 
+function rowToForm(row) {
+  return {
+    ...empty,
+    ...row,
+    legacy_id: row.legacy_id ?? "",
+    lat: row.lat ?? "",
+    lng: row.lng ?? "",
+  };
+}
+
 export default function DealersAdmin({ dealers }) {
   const [form, setForm] = useState(empty);
-  const [pending, startTransition] = useTransition();
+  const { busy, message, error, run, clearFeedback } = useAdminCrud();
+
+  async function submit(e) {
+    e.preventDefault();
+    const ok = await run(() => upsertDealer(form), form.id ? "Dealer updated." : "Dealer created.");
+    if (ok && !form.id) setForm(empty);
+  }
+
+  async function remove(id) {
+    if (!window.confirm("Delete this dealer?")) return;
+    const ok = await run(() => deleteDealer(id), "Dealer deleted.");
+    if (ok && form.id === id) setForm(empty);
+  }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+    <div className="admin-split-layout">
       <div className="admin-card overflow-hidden">
         <div className="admin-table-toolbar">
           <h3>Dealer network</h3>
+          <button type="button" className="admin-btn admin-btn-accent admin-btn-sm" onClick={() => { setForm(empty); clearFeedback(); }}>
+            <Plus size={14} strokeWidth={1.5} />
+            New dealer
+          </button>
         </div>
         <div className="admin-table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr><th>Name</th><th>City</th><th>Coords</th><th>Active</th><th /></tr>
-          </thead>
-          <tbody>
-            {dealers.map((row) => (
-              <tr key={row.id}>
-                <td>{row.name}</td>
-                <td>{row.city}</td>
-                <td className="text-[var(--admin-muted)]">{row.lat}, {row.lng}</td>
-                <td>{row.is_active ? "Yes" : "No"}</td>
-                <td>
-                  <button type="button" className="admin-btn admin-btn-ghost" onClick={() => setForm({ ...row, legacy_id: row.legacy_id ?? "" })}>Edit</button>
-                  <button type="button" className="admin-btn admin-btn-ghost" onClick={() => startTransition(() => deleteDealer(row.id))}>Delete</button>
-                </td>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>City</th>
+                <th>Active</th>
+                <th />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {dealers.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.name}</td>
+                  <td>{row.city}</td>
+                  <td>{row.is_active ? "Yes" : "No"}</td>
+                  <td className="space-x-1 whitespace-nowrap">
+                    <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => { setForm(rowToForm(row)); clearFeedback(); }}>
+                      Edit
+                    </button>
+                    <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => remove(row.id)}>
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          startTransition(async () => {
-            await upsertDealer(form);
-            if (!form.id) setForm(empty);
-          });
-        }}
-        className="admin-card admin-card-body space-y-3"
-      >
-        <h2 className="font-serif text-xl">{form.id ? "Edit dealer" : "Add dealer"}</h2>
-        <input className="admin-input" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-        <textarea className="admin-textarea" placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} required />
-        <input className="admin-input" placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
-        <input className="admin-input" placeholder="Pincode" value={form.pincode || ""} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
-        <input className="admin-input" placeholder="Phone" value={form.phone || ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-        <input className="admin-input" placeholder="Email (for lead notifications)" value={form.email || ""} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        <input className="admin-input" placeholder="WhatsApp" value={form.whatsapp || ""} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
-        <input className="admin-input" placeholder="Dealer code" value={form.dealer_code || ""} onChange={(e) => setForm({ ...form, dealer_code: e.target.value })} />
-        <input className="admin-input" placeholder="Contact person" value={form.contact_person || ""} onChange={(e) => setForm({ ...form, contact_person: e.target.value })} />
-        <div className="grid grid-cols-2 gap-2">
-          <input className="admin-input" placeholder="Latitude" value={form.lat ?? ""} onChange={(e) => setForm({ ...form, lat: e.target.value })} />
-          <input className="admin-input" placeholder="Longitude" value={form.lng ?? ""} onChange={(e) => setForm({ ...form, lng: e.target.value })} />
+      <form onSubmit={submit} className="admin-card admin-form-panel max-h-[calc(100vh-6rem)] overflow-y-auto">
+        <div className="admin-card-header">
+          <h2>{form.id ? "Edit dealer" : "New dealer"}</h2>
         </div>
-        <input className="admin-input" placeholder="Week hours" value={form.hours_week || ""} onChange={(e) => setForm({ ...form, hours_week: e.target.value })} />
-        <input className="admin-input" placeholder="Sunday hours" value={form.hours_sun || ""} onChange={(e) => setForm({ ...form, hours_sun: e.target.value })} />
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-          Active on Find a Dealer
-        </label>
-        <button type="submit" disabled={pending} className="admin-btn admin-btn-primary">Save dealer</button>
+        <div className="admin-card-body space-y-3">
+          <AdminFeedback error={error} message={message} />
+          <div>
+            <label className="admin-label">Name</label>
+            <input className="admin-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          </div>
+          <div>
+            <label className="admin-label">Address</label>
+            <textarea className="admin-textarea" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} required />
+          </div>
+          <div className="admin-form-grid admin-form-grid-2">
+            <div>
+              <label className="admin-label">City</label>
+              <input className="admin-input" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
+            </div>
+            <div>
+              <label className="admin-label">Pincode</label>
+              <input className="admin-input" value={form.pincode || ""} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
+            </div>
+          </div>
+          <div className="admin-form-grid admin-form-grid-2">
+            <div>
+              <label className="admin-label">Phone</label>
+              <input className="admin-input" value={form.phone || ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            </div>
+            <div>
+              <label className="admin-label">Email</label>
+              <input className="admin-input" value={form.email || ""} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            </div>
+          </div>
+          <div className="admin-form-grid admin-form-grid-2">
+            <div>
+              <label className="admin-label">WhatsApp</label>
+              <input className="admin-input" value={form.whatsapp || ""} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
+            </div>
+            <div>
+              <label className="admin-label">Dealer code</label>
+              <input className="admin-input" value={form.dealer_code || ""} onChange={(e) => setForm({ ...form, dealer_code: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <label className="admin-label">Contact person</label>
+            <input className="admin-input" value={form.contact_person || ""} onChange={(e) => setForm({ ...form, contact_person: e.target.value })} />
+          </div>
+          <div className="admin-form-grid admin-form-grid-2">
+            <div>
+              <label className="admin-label">Latitude</label>
+              <input className="admin-input" value={form.lat ?? ""} onChange={(e) => setForm({ ...form, lat: e.target.value })} />
+            </div>
+            <div>
+              <label className="admin-label">Longitude</label>
+              <input className="admin-input" value={form.lng ?? ""} onChange={(e) => setForm({ ...form, lng: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <label className="admin-label">Week hours</label>
+            <input className="admin-input" value={form.hours_week || ""} onChange={(e) => setForm({ ...form, hours_week: e.target.value })} />
+          </div>
+          <div>
+            <label className="admin-label">Sunday hours</label>
+            <input className="admin-input" value={form.hours_sun || ""} onChange={(e) => setForm({ ...form, hours_sun: e.target.value })} />
+          </div>
+          <label className="admin-checkbox">
+            <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
+            Active on Find a Dealer
+          </label>
+          <button type="submit" disabled={busy} className="admin-btn admin-btn-primary w-full">
+            {busy ? "Saving…" : form.id ? "Update dealer" : "Create dealer"}
+          </button>
+        </div>
       </form>
     </div>
   );

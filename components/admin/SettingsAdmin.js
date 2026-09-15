@@ -1,32 +1,27 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { saveCompanySettings, saveEmailSettings, sendTestEmail } from "@/lib/admin/actions";
+import { useAdminCrud } from "@/lib/admin/useAdminCrud";
+import AdminFeedback from "@/components/admin/AdminFeedback";
 
 export default function SettingsAdmin({ companySettings, emailSettings, envStatus }) {
   const [company, setCompany] = useState(companySettings);
   const [email, setEmail] = useState(emailSettings);
   const [testTo, setTestTo] = useState(emailSettings.main_email || "");
-  const [message, setMessage] = useState("");
-  const [pending, startTransition] = useTransition();
+  const { busy, message, error, run } = useAdminCrud();
 
   return (
     <div className="grid gap-6 xl:grid-cols-2">
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          startTransition(async () => {
-            try {
-              await saveCompanySettings(company);
-              setMessage("Company information saved.");
-            } catch (err) {
-              setMessage(err.message || "Save failed.");
-            }
-          });
+          await run(() => saveCompanySettings(company), "Company information saved.");
         }}
         className="admin-card admin-card-body space-y-3"
       >
         <h2 className="font-serif text-xl">Company & contact information</h2>
+        <AdminFeedback error={error} message={message} />
         <input className="admin-input" placeholder="Company name" value={company.name || ""} onChange={(e) => setCompany({ ...company, name: e.target.value })} />
         <input className="admin-input" placeholder="Tagline" value={company.tagline || ""} onChange={(e) => setCompany({ ...company, tagline: e.target.value })} />
         <input className="admin-input" placeholder="Phone" value={company.phone || ""} onChange={(e) => setCompany({ ...company, phone: e.target.value })} />
@@ -35,26 +30,18 @@ export default function SettingsAdmin({ companySettings, emailSettings, envStatu
         <textarea className="admin-textarea" placeholder="Address" value={company.address || ""} onChange={(e) => setCompany({ ...company, address: e.target.value })} />
         <input className="admin-input" placeholder="Google Maps query" value={company.map_embed_query || ""} onChange={(e) => setCompany({ ...company, map_embed_query: e.target.value })} />
         <input className="admin-input" placeholder="Working hours" value={company.hours || ""} onChange={(e) => setCompany({ ...company, hours: e.target.value })} />
-        <button type="submit" disabled={pending} className="admin-btn admin-btn-primary">Save company info</button>
+        <button type="submit" disabled={busy} className="admin-btn admin-btn-primary">Save company info</button>
       </form>
 
       <div className="space-y-6">
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            startTransition(async () => {
-              try {
-                await saveEmailSettings(email);
-                setMessage("Email & SMTP settings saved.");
-              } catch (err) {
-                setMessage(err.message || "Save failed.");
-              }
-            });
+            await run(() => saveEmailSettings(email), "Email & SMTP settings saved.");
           }}
           className="admin-card admin-card-body space-y-3"
         >
           <h2 className="font-serif text-xl">SMTP & enquiry routing</h2>
-          {message ? <p className="text-sm text-[var(--admin-gold)]">{message}</p> : null}
 
           <label className="admin-label">Mail provider</label>
           <select
@@ -164,7 +151,7 @@ export default function SettingsAdmin({ companySettings, emailSettings, envStatu
             Send customer confirmation email
           </label>
 
-          <button type="submit" disabled={pending} className="admin-btn admin-btn-primary">
+          <button type="submit" disabled={busy} className="admin-btn admin-btn-primary">
             Save email settings
           </button>
         </form>
@@ -180,18 +167,14 @@ export default function SettingsAdmin({ companySettings, emailSettings, envStatu
           />
           <button
             type="button"
-            disabled={pending}
+            disabled={busy}
             className="admin-btn admin-btn-ghost"
-            onClick={() =>
-              startTransition(async () => {
-                try {
-                  const result = await sendTestEmail(testTo);
-                  setMessage(`Test email sent via ${result.method}.`);
-                } catch (err) {
-                  setMessage(err.message || "Test failed.");
-                }
-              })
-            }
+            onClick={async () => {
+              await run(async () => {
+                const result = await sendTestEmail(testTo);
+                return result;
+              }, `Test email sent.`);
+            }}
           >
             Send SMTP test
           </button>
