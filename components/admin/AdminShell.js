@@ -122,10 +122,7 @@ export default function AdminShell({ profile, alertCount = 0, children }) {
         <div className="admin-sidebar-inner">
           <div className="admin-brand">
             <Image src={assets.brand.logo} alt="Avalon" width={108} height={32} priority />
-            <div className="admin-brand-copy">
-              <span className="admin-sidebar-label">Brand Console</span>
-              <small className="admin-sidebar-label">Avalon Lifestyle</small>
-            </div>
+            
           </div>
           <nav aria-label="Admin sections">
             {navGroups.map((group) => (
