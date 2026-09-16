@@ -13,9 +13,16 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid question" }, { status: 400 });
   }
 
+  const preferredLanguage = ["en", "ta", "auto"].includes(body.preferredLanguage)
+    ? body.preferredLanguage
+    : body.language && ["en", "ta", "auto"].includes(body.language)
+      ? body.language
+      : "auto";
+
   const result = await runAvalonChat(question, {
     conversationId: body.conversationId,
     debug: false,
+    preferredLanguage,
   });
 
   return NextResponse.json({

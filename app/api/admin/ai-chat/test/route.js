@@ -10,9 +10,12 @@ export async function POST(request) {
   const question = String(body.question || "").trim();
   if (!question) return NextResponse.json({ error: "question required" }, { status: 400 });
 
+  const preferredLanguage = ["en", "ta", "auto"].includes(body.preferredLanguage) ? body.preferredLanguage : "auto";
+
   const result = await runAvalonChat(question, {
     conversationId: body.conversationId,
     debug: true,
+    preferredLanguage,
   });
 
   return NextResponse.json(result);

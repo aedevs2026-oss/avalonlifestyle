@@ -19,8 +19,9 @@ Admin-managed knowledge pipeline: upload sources → extract → chunk → embed
 | Variable | Description |
 |----------|-------------|
 | `GEMINI_API_KEY` | **Required for Gemini** — from [Google AI Studio](https://aistudio.google.com/apikey). Alias: `GOOGLE_GENERATIVE_AI_API_KEY` |
-| `AI_CHAT_PROVIDER` | `gemini` (default when key is set), `rules`, `openai`, or `ollama` |
-| `AI_CHAT_MODEL` | Default `gemini-3.6-flash` |
+| `XAI_API_KEY` | xAI Grok (server only) |
+| `AI_CHAT_PROVIDER` | `grok`, `gemini`, `rules`, `openai`, or `ollama` (defaults to `grok` if `XAI_API_KEY` is set, else `gemini`) |
+| `AI_CHAT_MODEL` | Default `grok-4.6` or `gemini-3.6-flash` by provider |
 | `EMBEDDING_PROVIDER` | `gemini` (default when key is set), `openai`, `ollama`, or `none` |
 | `EMBEDDING_MODEL` | Default `text-embedding-004` (768 dims) |
 | `EMBEDDING_DIMENSION` | Must match DB column (default `768`) |
@@ -65,7 +66,7 @@ Default with Gemini: **`text-embedding-004`** at 768 dimensions (matches migrati
 2. Published `ai_faqs`  
 3. Published `ai_company_knowledge`  
 4. Vector chunks (approved/enabled)  
-5. Gemini (or other LLM) phrasing only when `AI_CHAT_PROVIDER` is `gemini` / `openai` / `ollama` and context is retrieved
+5. Grok / Gemini / other LLM phrasing when `AI_CHAT_PROVIDER` is set and context is retrieved (`npm run test:grok` to verify xAI)
 
 ## Not included yet
 

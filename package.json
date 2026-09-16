@@ -11,7 +11,10 @@
     "grant-admin": "node scripts/grant-admin.mjs",
     "admin:smoke": "node scripts/admin-smoke.mjs",
     "test:product-crud": "node scripts/test-product-crud.mjs",
-    "test:ai-chat": "node scripts/test-ai-chat.mjs"
+    "test:ai-chat": "node scripts/test-ai-chat.mjs",
+    "test:ai-chat:full": "node scripts/test-ai-chat-full.mjs",
+    "test:grok": "node scripts/test-grok.mjs",
+    "test:chat-model": "node scripts/test-chat-model.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

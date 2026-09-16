@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -19,56 +19,30 @@ import {
   Settings,
   Sparkles,
   Tag,
+  Volume2,
   X,
 } from "lucide-react";
 import { assets } from "@/lib/assets";
+import {
+  detectLanguageFromText,
+  speechRecognitionLocale,
+  speechSynthesisLocale,
+} from "@/lib/ai/language";
+import { getChatCopy, uiLocaleFromPreference } from "@/components/chat/chatLocale";
 import ChatProductCarousel from "@/components/chat/ChatProductCarousel";
 import ChatComparisonGrid from "@/components/chat/ChatComparisonGrid";
 import ChatDealerList from "@/components/chat/ChatDealerList";
 import "./ask-avalon.css";
 
-const PRIMARY_ACTIONS = [
-  {
-    label: "Find my perfect mattress",
-    icon: BedDouble,
-    prompt: "I need help finding the right Avalon mattress for me",
-  },
-  {
-    label: "Compare products",
-    icon: GitCompare,
-    prompt: "Compare Prince and King mattresses",
-  },
-  {
-    label: "Find a dealer near you",
-    icon: MapPin,
-    prompt: "Where can I buy Avalon mattresses near me?",
-  },
-  {
-    label: "Ask about Avalon",
-    icon: Sparkles,
-    prompt: "Tell me about Avalon Premium Mattress",
-  },
-];
+const LANG_STORAGE_KEY = "aa-lang-pref";
+const PRIMARY_ICONS = [BedDouble, GitCompare, MapPin, Sparkles];
+const QUICK_ICONS = [BedDouble, GitCompare, MapPin, BadgeCheck, Settings, Tag, Package, Headphones];
 
-const QUICK_ACTIONS = [
-  { label: "Find my mattress", icon: BedDouble, prompt: "Recommend an Avalon mattress for me" },
-  { label: "Compare products", icon: GitCompare, prompt: "Compare two Avalon mattresses" },
-  { label: "Find a dealer", icon: MapPin, prompt: "Find a dealer near me" },
-  { label: "Warranty info", icon: BadgeCheck, prompt: "What is the warranty on Avalon mattresses?" },
-  { label: "Care & maintenance", icon: Settings, prompt: "How do I care for my Avalon mattress?" },
-  { label: "Offers & discounts", icon: Tag, prompt: "Are there any current offers on Avalon mattresses?" },
-  { label: "Track order", icon: Package, prompt: "I want to talk to someone about my order" },
-  { label: "Talk to an expert", icon: Headphones, prompt: "I would like to speak with an Avalon representative" },
-];
-
-const TOPIC_PILLS = ["Mattresses", "Sofas", "Warranty", "Offers"];
-
-const POPULAR = [
-  "Best mattress for back pain?",
-  "Which mattress is good for side sleepers?",
-  "Show mattresses under ₹30,000",
-  "What is the difference between Prince and King?",
-];
+function inferSpeechLang(langPref, text) {
+  if (langPref === "ta") return "ta";
+  if (langPref === "en") return "en";
+  return detectLanguageFromText(text);
+}
 
 export default function AskAvalonWidget() {
   const [open, setOpen] = useState(false);
@@ -80,10 +54,26 @@ export default function AskAvalonWidget() {
   const [conversationId, setConversationId] = useState(null);
   const [listening, setListening] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [langPref, setLangPref] = useState("auto");
+  const [speakingIndex, setSpeakingIndex] = useState(null);
   const listRef = useRef(null);
   const recognitionRef = useRef(null);
 
+  const uiLocale = uiLocaleFromPreference(langPref);
+  const copy = useMemo(() => getChatCopy(uiLocale), [uiLocale]);
+
   const inChat = messages.length > 0;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = sessionStorage.getItem(LANG_STORAGE_KEY);
+    if (saved === "en" || saved === "ta" || saved === "auto") setLangPref(saved);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    sessionStorage.setItem(LANG_STORAGE_KEY, langPref);
+  }, [langPref]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -115,13 +105,17 @@ export default function AskAvalonWidget() {
       if (!q || loading) return;
       setInput("");
       setVoiceMode(false);
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        setSpeakingIndex(null);
+      }
       setMessages((m) => [...m, { role: "user", content: q }]);
       setLoading(true);
       try {
         const res = await fetch("/api/ai-chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: q, conversationId }),
+          body: JSON.stringify({ question: q, conversationId, preferredLanguage: langPref }),
         });
         const json = await res.json();
         if (json.conversationId) setConversationId(json.conversationId);
@@ -129,7 +123,7 @@ export default function AskAvalonWidget() {
           ...m,
           {
             role: "assistant",
-            content: json.answer || "Sorry, I could not answer that.",
+            content: json.answer || copy.errorAnswer,
             products: json.products || [],
             comparison: json.comparison || null,
             dealers: json.dealers || [],
@@ -137,18 +131,15 @@ export default function AskAvalonWidget() {
           },
         ]);
       } catch {
-        setMessages((m) => [
-          ...m,
-          { role: "assistant", content: "Something went wrong. Please try again or contact support." },
-        ]);
+        setMessages((m) => [...m, { role: "assistant", content: copy.errorGeneric }]);
       } finally {
         setLoading(false);
       }
     },
-    [conversationId, input, loading],
+    [conversationId, input, loading, langPref, copy.errorAnswer, copy.errorGeneric],
   );
 
-  function startVoice() {
+  const startVoice = useCallback(() => {
     const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
     if (!SR) {
       setVoiceMode(true);
@@ -156,7 +147,7 @@ export default function AskAvalonWidget() {
     }
     setVoiceMode(true);
     const rec = new SR();
-    rec.lang = "en-IN";
+    rec.lang = speechRecognitionLocale(langPref, input);
     rec.interimResults = false;
     rec.maxAlternatives = 1;
     recognitionRef.current = rec;
@@ -170,7 +161,7 @@ export default function AskAvalonWidget() {
     rec.onend = () => setListening(false);
     setListening(true);
     rec.start();
-  }
+  }, [input, langPref, send]);
 
   function stopVoice() {
     recognitionRef.current?.stop();
@@ -178,28 +169,37 @@ export default function AskAvalonWidget() {
     setVoiceMode(false);
   }
 
-  function pillPrompt(topic) {
-    const map = {
-      Mattresses: "Show me Avalon mattresses",
-      Sofas: "Tell me about Avalon furniture",
-      Warranty: "What warranty do Avalon mattresses include?",
-      Offers: "Are there offers on Avalon mattresses?",
-    };
-    send(map[topic] || topic);
+  function toggleSpeak(index, text) {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    if (speakingIndex === index) {
+      window.speechSynthesis.cancel();
+      setSpeakingIndex(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const replyLang = inferSpeechLang(langPref, text);
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = speechSynthesisLocale(replyLang);
+    utter.onend = () => setSpeakingIndex(null);
+    utter.onerror = () => setSpeakingIndex(null);
+    setSpeakingIndex(index);
+    window.speechSynthesis.speak(utter);
   }
 
   function handleCompare(name) {
     setInput(`Compare ${name} and `);
-    if (listRef.current?.closest(".aa-panel-body")) {
-      const footer = document.querySelector(".aa-input-row input");
-      footer?.focus();
-    }
+    const footer = document.querySelector(".aa-input-row input");
+    footer?.focus();
   }
 
   function goHome() {
     setMessages([]);
     setVoiceMode(false);
     setInput("");
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setSpeakingIndex(null);
+    }
   }
 
   if (!open) {
@@ -207,7 +207,7 @@ export default function AskAvalonWidget() {
       <button
         type="button"
         className={`aa-launcher${isMobile ? " aa-launcher--mobile" : ""}`}
-        aria-label="Open Ask Avalon"
+        aria-label={copy.launcherLabel}
         onClick={() => {
           setOpen(true);
           setMinimized(false);
@@ -217,8 +217,8 @@ export default function AskAvalonWidget() {
           <MessageCircle size={isMobile ? 22 : 20} />
         </span>
         <span className="aa-launcher-text">
-          Ask Avalon
-          {!isMobile ? <small>Your sleep &amp; shopping assistant</small> : null}
+          {copy.launcherTitle}
+          {!isMobile ? <small>{copy.launcherSubtitle}</small> : null}
         </span>
         {isMobile ? <ChevronRight size={18} className="aa-launcher-chevron" aria-hidden /> : null}
       </button>
@@ -232,36 +232,49 @@ export default function AskAvalonWidget() {
         className={`aa-panel aa-panel--desktop${minimized ? " aa-panel--minimized" : ""}${isMobile ? " aa-panel--mobile" : ""}`}
         role="dialog"
         aria-modal="true"
-        aria-label="Ask Avalon"
+        aria-label={copy.dialogLabel}
       >
         <header className="aa-header">
           {isMobile && inChat ? (
-            <button type="button" className="aa-header-btn aa-header-back" aria-label="Back to home" onClick={goHome}>
+            <button type="button" className="aa-header-btn aa-header-back" aria-label={copy.backHome} onClick={goHome}>
               <ArrowLeft size={20} />
             </button>
           ) : null}
           <div className="aa-header-brand">
             <Image src={assets.brand.logo} alt="Avalon" width={100} height={32} />
             <div>
-              <div className="aa-header-title">Ask Avalon</div>
+              <div className="aa-header-title">{copy.launcherTitle}</div>
               <div className="aa-status">
                 <span className="aa-status-dot" />
-                Online
+                {copy.online}
               </div>
             </div>
           </div>
           <div className="aa-header-actions">
+            <div className="aa-lang-toggle" role="group" aria-label={copy.langAria}>
+              {["auto", "en", "ta"].map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  className={langPref === code ? "is-active" : ""}
+                  onClick={() => setLangPref(code)}
+                  aria-pressed={langPref === code}
+                >
+                  {code === "auto" ? copy.langAuto : code === "en" ? copy.langEn : copy.langTa}
+                </button>
+              ))}
+            </div>
             {!isMobile ? (
               <button
                 type="button"
                 className="aa-header-btn"
-                aria-label="Minimize"
+                aria-label={copy.minimize}
                 onClick={() => setMinimized((m) => !m)}
               >
                 <Minus size={18} />
               </button>
             ) : null}
-            <button type="button" className="aa-header-btn" aria-label="Close" onClick={() => setOpen(false)}>
+            <button type="button" className="aa-header-btn" aria-label={copy.close} onClick={() => setOpen(false)}>
               <X size={18} />
             </button>
           </div>
@@ -274,60 +287,66 @@ export default function AskAvalonWidget() {
                 <Mic size={40} />
               </div>
               <p className="font-semibold text-[var(--avalon-navy)]">
-                {listening ? "I'm listening…" : "Voice search"}
+                {listening ? copy.listening : copy.voiceSearch}
               </p>
-              <p className="aa-voice-hint">
-                Try saying &ldquo;Find a medium firm mattress under thirty thousand rupees&rdquo;
-              </p>
-              <button type="button" className="aa-btn aa-btn-outline" onClick={stopVoice}>Cancel</button>
+              <p className="aa-voice-hint">{copy.voiceHint}</p>
+              <button type="button" className="aa-btn aa-btn-outline" onClick={stopVoice}>{copy.cancel}</button>
             </div>
           ) : !inChat ? (
             <>
               <div className="aa-hero">
                 <Image src={assets.home.hero} alt="" fill sizes="400px" className="object-cover" />
-                <div className="aa-hero-caption">Better Sleep. A Brighter Tomorrow.</div>
+                <div className="aa-hero-caption">{copy.heroCaption}</div>
               </div>
               <div className="aa-home">
                 <p className="aa-greeting">
-                  <strong>Hi! I&apos;m Ask Avalon 👋</strong>
-                  I can help you choose the right mattress, compare models, find dealers, and answer questions using
-                  approved Avalon product information.
+                  <strong>{copy.greetingTitle}</strong>
+                  {copy.greetingBody}
                 </p>
                 <div className="aa-action-grid">
-                  {PRIMARY_ACTIONS.map((a) => (
-                    <button key={a.label} type="button" className="aa-action-card" onClick={() => send(a.prompt)}>
-                      <a.icon className="aa-action-card-icon" size={22} strokeWidth={1.75} />
-                      <span>{a.label}</span>
-                    </button>
-                  ))}
+                  {copy.primaryActions.map((a, i) => {
+                    const Icon = PRIMARY_ICONS[i] || Sparkles;
+                    return (
+                      <button key={a.label} type="button" className="aa-action-card" onClick={() => send(a.prompt)}>
+                        <Icon className="aa-action-card-icon" size={22} strokeWidth={1.75} />
+                        <span>{a.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
                 <div className="aa-quick-grid aa-quick-grid--desktop">
-                  {QUICK_ACTIONS.map((a) => (
-                    <button key={a.label} type="button" className="aa-quick-tile" onClick={() => send(a.prompt)}>
-                      <a.icon size={20} strokeWidth={1.75} />
-                      {a.label}
-                    </button>
-                  ))}
+                  {copy.quickActions.map((a, i) => {
+                    const Icon = QUICK_ICONS[i] || Sparkles;
+                    return (
+                      <button key={a.label} type="button" className="aa-quick-tile" onClick={() => send(a.prompt)}>
+                        <Icon size={20} strokeWidth={1.75} />
+                        {a.label}
+                      </button>
+                    );
+                  })}
                 </div>
                 <div className="aa-quick-scroll aa-quick-scroll--mobile">
-                  {QUICK_ACTIONS.slice(0, 6).map((a) => (
-                    <button key={a.label} type="button" className="aa-quick-chip" onClick={() => send(a.prompt)}>
-                      <a.icon size={16} strokeWidth={1.75} />
-                      {a.label}
-                    </button>
-                  ))}
+                  {copy.quickActions.slice(0, 6).map((a, i) => {
+                    const Icon = QUICK_ICONS[i] || Sparkles;
+                    return (
+                      <button key={a.label} type="button" className="aa-quick-chip" onClick={() => send(a.prompt)}>
+                        <Icon size={16} strokeWidth={1.75} />
+                        {a.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div className="aa-pills">
-                {TOPIC_PILLS.map((t) => (
-                  <button key={t} type="button" className="aa-pill" onClick={() => pillPrompt(t)}>
-                    {t}
+                {copy.topicPills.map((t) => (
+                  <button key={t.label} type="button" className="aa-pill" onClick={() => send(t.prompt)}>
+                    {t.label}
                   </button>
                 ))}
               </div>
               <div className="aa-popular">
-                <h3>Popular questions</h3>
-                {POPULAR.map((q) => (
+                <h3>{copy.popularTitle}</h3>
+                {copy.popular.map((q) => (
                   <button key={q} type="button" onClick={() => send(q)}>
                     {q}
                     <ChevronRight size={16} />
@@ -341,6 +360,17 @@ export default function AskAvalonWidget() {
                 <div key={i}>
                   <div className={`aa-bubble aa-bubble--${msg.role === "user" ? "user" : "bot"}`}>
                     <p>{msg.content}</p>
+                    {msg.role === "assistant" ? (
+                      <button
+                        type="button"
+                        className={`aa-listen-btn${speakingIndex === i ? " is-speaking" : ""}`}
+                        aria-label={speakingIndex === i ? copy.stopListen : copy.listen}
+                        onClick={() => toggleSpeak(i, msg.content)}
+                      >
+                        <Volume2 size={16} />
+                        <span>{speakingIndex === i ? copy.stopListen : copy.listen}</span>
+                      </button>
+                    ) : null}
                     {msg.role === "assistant" && msg.comparison ? (
                       <ChatComparisonGrid comparison={msg.comparison} products={msg.products} />
                     ) : null}
@@ -352,9 +382,9 @@ export default function AskAvalonWidget() {
                     ) : null}
                     {msg.handoff ? (
                       <div className="aa-handoff">
-                        <Link href="/find-a-dealer">Find dealer</Link>
-                        <Link href="/contact">Request callback</Link>
-                        <a href="https://wa.me/" rel="noopener noreferrer">WhatsApp</a>
+                        <Link href="/find-a-dealer">{copy.findDealer}</Link>
+                        <Link href="/contact">{copy.requestCallback}</Link>
+                        <a href="https://wa.me/" rel="noopener noreferrer">{copy.whatsapp}</a>
                       </div>
                     ) : null}
                   </div>
@@ -383,19 +413,19 @@ export default function AskAvalonWidget() {
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your question…"
+                placeholder={copy.inputPlaceholder}
                 maxLength={2000}
-                aria-label="Message"
+                aria-label={copy.messageLabel}
               />
               <button
                 type="button"
                 className={`aa-mic-btn${listening ? " is-active" : ""}`}
-                aria-label="Voice input"
+                aria-label={copy.voiceInput}
                 onClick={startVoice}
               >
                 <Mic size={20} />
               </button>
-              <button type="submit" className="aa-send-btn" disabled={loading} aria-label="Send">
+              <button type="submit" className="aa-send-btn" disabled={loading} aria-label={copy.send}>
                 <Send size={18} />
               </button>
             </form>

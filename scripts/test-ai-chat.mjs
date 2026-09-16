@@ -31,7 +31,12 @@ const BASE = process.env.TEST_BASE_URL || "http://localhost:3000";
 const questions = [
   "Compare Prince and King mattresses",
   "Tell me about Avalon",
-  "Which mattress suits side sleepers?",
+  "Which mattress is good for side sleepers?",
+  "What is the warranty on the Prince mattress?",
+  "Show mattresses under ₹30000",
+  "What material is used in the King mattress?",
+  "Enakku medium firm mattress venum under 30000",
+  "Dharmapuri Near Dealers",
 ];
 
 async function main() {
